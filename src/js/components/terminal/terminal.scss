@@ -1,0 +1,34 @@
+.bc-terminal{
+    background: black;
+    position: relative;
+    width: 100%;
+    color: #BDBDBD;
+    .collapsable-bar{
+        background: #1e1e1e;
+        height: 3px;
+        text-align: center;
+        border: #BDBDBD solid 1px;
+        border-left: 0px;
+        border-right: 0px;
+        &.compiler-error{ background: red; height: 6px; }
+        &.compiler-warning{ background: orange; height: 6px; }
+        &.compiler-success{ background: green; height: 6px; }
+    }
+    .button-bar{
+        position: absolute;
+        top: -20px;
+        right: 10px;
+        z-index: 3;
+        button{
+            margin-right: 5px;
+        }
+    }
+    .logs{
+        margin: 0;
+        padding: 5px;
+        overflow: auto;
+        pre code{
+            color: #F2F4F5;
+        }
+    }
+}
