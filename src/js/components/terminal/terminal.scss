@@ -10,13 +10,16 @@
         border: #BDBDBD solid 1px;
         border-left: 0px;
         border-right: 0px;
-        &.compiler-error{ 
-            background: red; height: 6px; 
-            .status{ background: red; }
+        &.compiler-error, &.testing-error{ 
+            background: #ee5959; 
+            height: 6px;
+            .status{ 
+                background: #ee5959; 
+                color: black;
+            }
         }
         &.compiler-warning{ background: orange; height: 6px; }
-        &.compiler-success{ background: green; height: 6px; }
-        &.ready .status{ display: none; }
+        &.compiler-success, &.testing-success{ background: green; height: 6px; }
         .status{
             font-size: 11px;
             padding: 3px 5px;
@@ -36,12 +39,16 @@
         z-index: 3;
         button{
             margin-right: 5px;
-            small{ display: block;}
+            small{ 
+                display: block;
+                font-size: 9px;
+                margin-top: -4px;
+            }
         }
     }
     .logs{
         margin: 0;
-        padding: 5px;
+        padding: 20px 10px 10px 10px;
         overflow: auto;
         pre code{
             color: #F2F4F5;
