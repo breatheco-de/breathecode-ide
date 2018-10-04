@@ -5,14 +5,29 @@
     color: #BDBDBD;
     .collapsable-bar{
         background: #1e1e1e;
-        height: 3px;
+        height: 4px;
         text-align: center;
         border: #BDBDBD solid 1px;
         border-left: 0px;
         border-right: 0px;
-        &.compiler-error{ background: red; height: 6px; }
+        &.compiler-error{ 
+            background: red; height: 6px; 
+            .status{ background: red; }
+        }
         &.compiler-warning{ background: orange; height: 6px; }
         &.compiler-success{ background: green; height: 6px; }
+        &.ready .status{ display: none; }
+        .status{
+            font-size: 11px;
+            padding: 3px 5px;
+            position: absolute;
+            left: auto;
+            background: black;
+            top: -10px;
+            transform: translateX(-50%);
+            border-radius: 5px;
+            border: #BDBDBD solid 1px;
+        }
     }
     .button-bar{
         position: absolute;
@@ -21,6 +36,7 @@
         z-index: 3;
         button{
             margin-right: 5px;
+            small{ display: block;}
         }
     }
     .logs{

@@ -4,7 +4,7 @@ import Editor from './components/editor/Editor.jsx';
 import Readme from './components/readme/Readme.jsx';
 import Terminal from './components/terminal/Terminal.jsx';
 import SplitPane from 'react-split-pane';
-const HOST = "";
+const HOST = "http://breathecode-tools-alesanchezr.c9users.io:8080";
 //create your first component
 export class Home extends React.Component{
     constructor(){
@@ -43,7 +43,7 @@ export class Home extends React.Component{
         fetch(HOST+'/exercise')
             .then(resp => resp.json())
             .then(exercises => this.setState({exercises, error: null}))
-            .catch((error) => this.state({error: 'There seems to be an error connecting with the server'}));
+            .catch((error) => this.setState({error: 'There seems to be an error connecting with the server'}));
 
         window.addEventListener("hashchange", () => this.loadInstructions());
         if(window.location.hash && window.location.hash!='#') this.loadInstructions();

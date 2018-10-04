@@ -1,12 +1,13 @@
 import React from 'react';
-import 'highlight.js/styles/monokai-sublime.css';
 import remark from 'remark';
 import './readme.scss';
+
+import 'prismjs/themes/prism-okaidia.css';
+
+//import 'prismjs/themes/prism.css';
 import PropTypes from 'prop-types';
 import reactRenderer from 'remark-react';
-import RemarkLowlight from 'remark-react-lowlight';
-import js from 'highlight.js/lib/languages/javascript';
-import bash from 'highlight.js/lib/languages/bash';
+import PrismRenderer from './PrismLowLight.jsx';
 import Typography from 'typography';
 import altonTheme from 'typography-theme-alton';
 altonTheme.baseFontSize = "16px";
@@ -31,24 +32,33 @@ const Instructions = ({children, readme, exercises, onPrevious, onNext }) => (<d
         </div>:''
     }
     <div>
-        {remark().use(reactRenderer, {
-          remarkReactComponents: {
-            code: RemarkLowlight({
-              js, bash
-            })
-          }
-        }).processSync(readme).contents}
-        <h2>Ok, enough with the reading! :)</h2>
-        <p>Click on any of the following exercises to read its instructions:</p>
-        <ol>
-            {exercises.map(ex => (
-                <li key={ex.slug}>
-                    <Link slug={ex.slug}>
-                        {ex.title}
-                    </Link>
-                </li>))
-            }
-        </ol>
+        {
+            remark().use(reactRenderer, {
+                remarkReactComponents: {
+                    code: PrismRenderer,
+                    pre: (props) => (typeof props.children[0] != 'string') ? 
+                                        PrismRenderer(props.children[0].props) : PrismRenderer(props)
+                },
+                sanitize: false
+            }).processSync(readme).contents
+            
+        }
+        
+        { (onPrevious) ? 
+            <div>
+                <h2>Ok, enough with the reading! :)</h2>
+                <p>Click on any of the following exercises to read its instructions:</p>
+                <ol>
+                    {exercises.map(ex => (
+                        <li key={ex.slug}>
+                            <Link slug={ex.slug}>
+                                {ex.title}
+                            </Link>
+                        </li>))
+                    }
+                </ol>
+            </div>:''
+        }
     </div>
 </div>);
 

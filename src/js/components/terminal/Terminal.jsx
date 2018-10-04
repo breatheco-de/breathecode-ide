@@ -4,7 +4,18 @@ import './terminal.scss';
 import io from 'socket.io-client';
 import Ansi from 'ansi-to-react';
 
-const Bar = ({status}) => (<div className={"collapsable-bar "+status}></div>);
+const getStatus = function(status){
+  switch(status){
+    case "initializing": return "Setting up the coding environment";
+    case "ready": return "Ready to compile";
+    case "compiler-error": return "Your code has errors";
+    case "compiler-warning": return "Your code compiled, but with some warnings";
+    case "compiler-success": return "Congrats! Your code is perfect!";
+    default: return "I'm working, have some patience";
+  }
+};
+
+const Bar = ({status}) => (<div className={"collapsable-bar "+status}><span className="status">{getStatus(status)}</span></div>);
 Bar.propTypes = {
   status: PropTypes.string
 };
@@ -49,6 +60,7 @@ export default class Terminal extends React.Component {
         <Bar status={this.state.status} />
         <div className="button-bar">
             <button 
+              data-toggle="tooltip" data-placement="top" title="Build"
               className="btn" 
               onClick={() => {
                 if(this.props.beforeCompile){
@@ -63,13 +75,16 @@ export default class Terminal extends React.Component {
                 }
               }}
             >
-              Save & Build
+                <i className="fas fa-box-open"></i>
+                <small>Build</small>
             </button>
             <button 
+              data-toggle="tooltip" data-placement="top" title="Open"
               className="btn" 
               onClick={() => window.open(this.props.host+'/preview')}
             >
-              Open
+                <i className="fas fa-play"></i>
+                <small>Run</small>
             </button>
         </div>
         <ul className="logs" style={{height: this.props.height}}>
