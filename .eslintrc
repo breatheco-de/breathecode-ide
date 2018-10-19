@@ -1,15 +1,20 @@
 {
-  parser: "babel-eslint",
+  "parser": "babel-eslint",
+  "globals": {
+      "process": true
+  },
   "plugins": [
     "react"
   ],
   "env": {
     "browser": true,
+    "es6": true
   },
   "rules": {
     "strict":0,
     "no-unused-vars": 0,
     "no-console": 1,
+    "no-process-env": 0,
     "semi": ["error", "always"],
     "allowImportExportEverywhere": false,
     "comma-dangle": [1, { //when to use the last comma
@@ -21,6 +26,11 @@
     }],
     "react/jsx-indent": ["error", 4],
     "react/prop-types": [2]
+  },
+  "settings": {
+    "react": {
+      "version": "16.4.1", // React version, default to the latest React stable release
+    }
   },
   "extends": ["eslint:recommended", "plugin:react/recommended"]
 }

@@ -2,6 +2,8 @@ const webpack = require('webpack');
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
+const Dotenv = require('dotenv-webpack');
+
 module.exports = {
   entry: [
     './src/js/index.js'
@@ -47,10 +49,15 @@ module.exports = {
   },
   plugins: [
     new webpack.HotModuleReplacementPlugin(),
-    new MonacoWebpackPlugin(),
+    new MonacoWebpackPlugin({
+      languages: ['javascript','json','html','css','scss', 'typescript']
+    }),
     new HtmlWebpackPlugin({
         favicon: '4geeks.ico',
         template: 'template.html'
+    }),
+    new Dotenv({
+        path: './.env'
     })
   ]
 };

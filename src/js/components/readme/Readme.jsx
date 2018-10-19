@@ -7,7 +7,9 @@ import 'prismjs/themes/prism-okaidia.css';
 //import 'prismjs/themes/prism.css';
 import PropTypes from 'prop-types';
 import reactRenderer from 'remark-react';
+import emoji from 'remark-emoji';
 import PrismRenderer from './PrismLowLight.jsx';
+import { Image, Anchor } from './components.jsx';
 import Typography from 'typography';
 import altonTheme from 'typography-theme-alton';
 altonTheme.baseFontSize = "16px";
@@ -33,8 +35,10 @@ const Instructions = ({children, readme, exercises, onPrevious, onNext }) => (<d
     }
     <div>
         {
-            remark().use(reactRenderer, {
+            remark().use(emoji).use(reactRenderer, {
                 remarkReactComponents: {
+                    img: Image,
+                    a: Anchor,
                     code: PrismRenderer,
                     pre: (props) => (typeof props.children[0] != 'string') ? 
                                         PrismRenderer(props.children[0].props) : PrismRenderer(props)

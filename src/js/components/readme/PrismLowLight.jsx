@@ -5,8 +5,6 @@ import jsx from 'refractor/lang/jsx.js';
 const h = React.createElement;
 
 export default (props) => {
-  console.log("Props",props);
-  
   //use jsx
   Refractor.register(jsx);
 

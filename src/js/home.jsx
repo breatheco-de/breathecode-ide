@@ -1,24 +1,30 @@
 import React from 'react';
-import logo from '../img/rigo-baby.jpg';
+import logo from '../img/breathecode.png';
 import Editor from './components/editor/Editor.jsx';
 import Readme from './components/readme/Readme.jsx';
 import Terminal from './components/terminal/Terminal.jsx';
 import SplitPane from 'react-split-pane';
-const HOST = "http://breathecode-tools-alesanchezr.c9users.io:8080";
+import Socket, { isPending } from './socket';
+import { loadExercises, loadSingleExercise, loadFile, saveFile } from './actions';
+
 //create your first component
 export class Home extends React.Component{
     constructor(){
         super();
         this.state = {
+            editorSocket: null,
             editorSize: 450,
+            codeHasBeenChanged: true,
             exercises: [],
             error: null,
             files: [],
+            compilerSocket: null,
             consoleLogs: [],
-            consoleStatus: 'loading',
+            consoleStatus: null,
+            isSaving: false,
             current: null,
             currentInstructions: null,
-            currentFile: null,
+            currentFileContent: null,
             currentFileName: null,
             readme: '',
             getIndex: (slug) => {
@@ -40,50 +46,65 @@ export class Home extends React.Component{
         };
     }
     componentDidMount(){
-        fetch(HOST+'/exercise')
-            .then(resp => resp.json())
-            .then(exercises => this.setState({exercises, error: null}))
-            .catch((error) => this.setState({error: 'There seems to be an error connecting with the server'}));
+        loadExercises()
+            .then((exercises) => {
+                this.setState({exercises, error: null });
+                if(!window.location.hash || window.location.hash == '#') this.loadInstructions(exercises[0].slug);
+            })
+            .catch(error => this.setState({ error }));
 
+        //check for changes on the hash
         window.addEventListener("hashchange", () => this.loadInstructions());
         if(window.location.hash && window.location.hash!='#') this.loadInstructions();
         
+        Socket.start(process.env.HOST);
+        //connect to the compiler
+        const compilerSocket = Socket.createScope('compiler');
+        compilerSocket.whenUpdated((scope, data) => {
+            let state = { consoleLogs: scope.logs, consoleStatus: scope.status };
+            if(typeof data.code == 'string') state.currentFileContent = data.code;
+            this.setState(state);
+        });
+        compilerSocket.onStatus('compiler-success', () => {
+            loadFile(this.state.currentSlug, this.state.currentFileName)
+                .then(content => this.setState({ currentFileContent: content, codeHasBeenChanged: false }));
+        });
+        this.setState({ compilerSocket });
     }
     loadInstructions(slug=null){
         if(!slug) slug = window.location.hash.slice(1,window.location.hash.length);
         if(slug=='' || slug=='/'){
-            fetch(HOST+'/readme')
-                .then(resp => resp.text())
-                .then(readme => this.setState({readme, currentSlug: null}));
+            this.state.next();
         } 
         else{
-            fetch(HOST+'/exercise/'+slug)
-                .then(resp => resp.json())
-                .then(_files => {
-                    const files = _files.filter(f => f.path.indexOf('.md') == -1);
+            loadSingleExercise(slug)
+                .then(files => {
                     this.setState({ files, currentSlug: slug });
-                    this.loadFile(files[0]);
+                    loadFile(slug, files[0].name).then(content => this.setState({ 
+                        currentFileContent: content, 
+                        currentFileName: files[0].name, 
+                        codeHasBeenChanged: true,
+                        consoleLogs: []
+                    }));
                 });
-            fetch(HOST+'/exercise/'+slug+'/readme/')
-                .then(resp => resp.text())
-                .then(readme => this.setState({ readme }));
+            loadFile(slug,'README.md').then(readme => this.setState({ readme }));
         }
     }
-    loadFile({name}){
-        fetch(HOST+'/exercise/'+this.state.currentSlug+'/file/'+name)
-            .then(resp => resp.text())
-            .then(readme => this.setState({ currentFile: readme, currentFileName: name }));
-    }
-    saveFile(){
-        return fetch(HOST+'/exercise/'+this.state.currentSlug+'/file/'+this.state.currentFileName,{
-            method: 'PUT',
-            body: this.state.currentFile
-        });
-    }
     render(){
+        const size = {
+            vertical: {
+                min: 50,
+                init: 550
+            },
+            horizontal: {
+                min: 50,
+                init: 450
+            }
+        };
         return (
-            <SplitPane split="vertical" minSize={50} defaultSize={450}>
+            <SplitPane split="vertical" minSize={size.vertical.min} defaultSize={size.vertical.init}>
                 <div>
+                    <img className="bclogo" src={logo} />
                     {(this.state.error) ?
                         <div className="alert alert-danger">{this.state.error}</div>:''
                     }
@@ -98,20 +119,33 @@ export class Home extends React.Component{
                 </div>
                 <div>
                     <SplitPane split="horizontal" 
-                        minSize={50} 
-                        defaultSize={450}
+                        minSize={size.horizontal.min} 
+                        defaultSize={size.horizontal.init}
                         onChange={ size => this.setState({editorSize: size}) }
                     >
                         <Editor 
                             files={this.state.files} 
-                            buffer={this.state.currentFile} 
-                            onOpen={(file) => this.loadFile(file)} 
+                            buffer={this.state.currentFileContent} 
+                            onOpen={(fileName) => loadFile(this.state.currentSlug,fileName).then(content => this.setState({ currentFileContent: content, currentFileName: fileName })) } 
+                            showStatus={true}
+                            onIdle={() => {
+                                saveFile(this.state.currentSlug, this.state.currentFileName, this.state.currentFileContent)
+                                            .then(status => this.setState({ isSaving: false }))
+                                            .catch(error => this.setState({ error, isSaving: false }));
+                            }}
                             height={this.state.editorSize}
-                            onChange={(content) => this.setState({currentFile: content})}
+                            onChange={(content) => this.setState({ currentFileContent: content, codeHasBeenChanged:true, isSaving: true })}
                         />
                         <Terminal 
-                            host={HOST} 
-                            beforeCompile={() => this.saveFile()}
+                            disabled={isPending(this.state.consoleStatus) || this.state.isSaving}
+                            host={process.env.HOST}
+                            status={this.state.isSaving ? { code: 'saving', message: 'Saving Files'} : this.state.consoleStatus}
+                            logs={this.state.consoleLogs}
+                            showTestBtn={!this.state.codeHasBeenChanged}
+                            showOpenBtn={!this.state.codeHasBeenChanged}
+                            onCompile={() => this.state.compilerSocket.emit('build', { exerciseSlug: this.state.currentSlug })}
+                            onTest={() => this.state.compilerSocket.emit('test', { exerciseSlug: this.state.currentSlug })}
+                            onOpen={() => window.open(process.env.HOST+'/preview')}
                             height={window.innerHeight - this.state.editorSize}
                             exercise={this.state.currentSlug}
                         />
@@ -121,3 +155,10 @@ export class Home extends React.Component{
         );
     }
 }
+
+/*
+    onPrettify={() => this.state.compilerSocket.emit('prettify', { 
+        fileName: this.state.currentFileName,
+        exerciseSlug: this.state.currentSlug
+    })}
+*/

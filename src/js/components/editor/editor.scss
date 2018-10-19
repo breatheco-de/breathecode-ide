@@ -7,4 +7,17 @@
         color: white;
         cursor: pointer;
     }
+    .editor-status{
+        display: inline-block;
+        position: absolute;
+        top: 42px;
+        right: 0px;
+        color: #8e8e8e;
+        z-index: 1;
+        font-size: 11px;
+        border: 1px solid #444444;
+        padding: 0px 3px;
+        width: 50px;
+        text-align: center;
+    }
 }
