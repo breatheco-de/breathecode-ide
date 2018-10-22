@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
   //props.children[0]
-export const Image = (props) => (<div className="text-center"><img src={props.src} alt={props.alt} /></div>);
+export const Image = (props) => (<span className="d-block text-center"><img src={props.src} alt={props.alt} /></span>);
 Image.propTypes = {
   src: PropTypes.string.isRequired,
   alt: PropTypes.string,

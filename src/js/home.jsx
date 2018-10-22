@@ -4,14 +4,49 @@ import Editor from './components/editor/Editor.jsx';
 import Readme from './components/readme/Readme.jsx';
 import Terminal from './components/terminal/Terminal.jsx';
 import SplitPane from 'react-split-pane';
-import Socket, { isPending } from './socket';
+import Socket, { isPending, getStatus } from './socket';
 import { loadExercises, loadSingleExercise, loadFile, saveFile } from './actions';
+import Joyride from 'react-joyride';
 
 //create your first component
 export class Home extends React.Component{
     constructor(){
         super();
         this.state = {
+            runHelp: false,
+            helpSteps: [
+                {
+                    target: '.bc-readme',
+                    content: <span><h4>1) Read!</h4>Every exercise will come with a brief introduction and some instructions on how to complete it.</span>,
+                    placement: 'right',
+                    disableBeacon: true
+                },
+                {
+                    target: '.react-monaco-editor-container',
+                    content: <span><h4>2) Code!</h4>Use this coding editor on the right of the screen to code and propose a solution.</span>,
+                    placement: 'left'
+                },
+                {
+                    target: '.bc-terminal .button-bar',
+                    content: <span><h4>3) Compile!</h4>Use the terminal buttons to <code>build</code> and <code>test</code> your exercises solutions.</span>,
+                    placement: 'left'
+                },
+                {
+                    target: '.bc-terminal .status',
+                    content: <span>The console will always display the current state of the code, compilation errors or test results.</span>,
+                    placement: 'bottom'
+                },
+                {
+                    target: '.next-exercise',
+                    content: 'Once you are satisfied with your code solution, you can go ahead to the next exercise.',
+                    placement: 'bottom'
+                },
+                {
+                    target: 'body',
+                    content: <span><h4>4) Deliver!</h4>After finishing all exercises run <code>$ bc deliver:exercises</code> on your command line to deliver the exercises into the breathecode platform.</span>,
+                    placement: 'center'
+                }
+            ],          
             editorSocket: null,
             editorSize: 450,
             codeHasBeenChanged: true,
@@ -79,14 +114,21 @@ export class Home extends React.Component{
         else{
             loadSingleExercise(slug)
                 .then(files => {
-                    this.setState({ files, currentSlug: slug });
-                    loadFile(slug, files[0].name).then(content => this.setState({ 
-                        currentFileContent: content, 
-                        currentFileName: files[0].name, 
+                    let runHelp = this.state.getIndex(slug) == 1;
+                    this.setState({ 
+                        runHelp, 
+                        files, 
+                        currentSlug: slug, 
+                        consoleLogs: [], 
                         codeHasBeenChanged: true,
-                        consoleLogs: []
+                        consoleStatus: { code: 'ready', message: getStatus('ready') }
+                    });
+                    if(files.length > 0) loadFile(slug, files[0].name).then(content => this.setState({ 
+                        currentFileContent: content, 
+                        currentFileName: files[0].name
                     }));
-                });
+                })
+                .catch(error => this.setState({ error }));
             loadFile(slug,'README.md').then(readme => this.setState({ readme }));
         }
     }
@@ -101,22 +143,48 @@ export class Home extends React.Component{
                 init: 450
             }
         };
+        
+        const LeftSide = (p) => (<div className={p.className}>
+            <Joyride
+                steps={this.state.helpSteps}
+                continuous={true}
+                run={this.state.runHelp}
+                locale={{ back: 'Previous', close: 'Close', last: 'Finish', next: 'Next' }}
+                styles={{
+                    options: {
+                        backgroundColor: '#FFFFFF',
+                        overlayColor: 'rgba(0, 0, 0, 0.9)'
+                    }
+                }}
+                callback = {(tour) => {
+                    const { type } = tour;
+                    if (type === 'tour:end') {
+                        this.setState({ runHelp: false });
+                    }
+                }}
+            />
+            <div className={"credits "+p.creditsPosition}>
+                <img className={"bclogo"} src={logo} />
+                <span>Made with love <br/> by <a href="https://breatheco.de" target="_blank" rel="noopener noreferrer">BreatheCode</a></span>
+            </div>
+            {(this.state.error) ?
+                <div className="alert alert-danger">{this.state.error}</div>:''
+            }
+            <div className="prev-next-bar">
+                {(this.state.previous()) ? <a className="prev-exercise" href={"#"+this.state.previous().slug}>Previous</a>:''}
+                {(this.state.next()) ? <a className="next-exercise" href={"#"+this.state.next().slug}>Next</a>:''}
+            </div>
+            <Readme 
+                readme={this.state.currentInstructions ? this.state.currentInstructions : this.state.readme} 
+                exercises={this.state.exercises} 
+            />
+        </div>);
+        
+        if(this.state.files.length == 0) return <LeftSide className="ml-5 mr-5" creditsPosition="bottom-center" />;
+        
         return (
             <SplitPane split="vertical" minSize={size.vertical.min} defaultSize={size.vertical.init}>
-                <div>
-                    <img className="bclogo" src={logo} />
-                    {(this.state.error) ?
-                        <div className="alert alert-danger">{this.state.error}</div>:''
-                    }
-                    <div className="prev-next-bar">
-                        {(this.state.previous()) ? <a className="prev-exercise" href={"#"+this.state.previous().slug}>Previous</a>:''}
-                        {(this.state.next()) ? <a className="next-exercise" href={"#"+this.state.next().slug}>Next</a>:''}
-                    </div>
-                    <Readme 
-                        readme={this.state.currentInstructions ? this.state.currentInstructions : this.state.readme} 
-                        exercises={this.state.exercises} 
-                    />
-                </div>
+                <LeftSide creditsPosition="top-right" />
                 <div>
                     <SplitPane split="horizontal" 
                         minSize={size.horizontal.min} 
@@ -130,16 +198,22 @@ export class Home extends React.Component{
                             showStatus={true}
                             onIdle={() => {
                                 saveFile(this.state.currentSlug, this.state.currentFileName, this.state.currentFileContent)
-                                            .then(status => this.setState({ isSaving: false }))
-                                            .catch(error => this.setState({ error, isSaving: false }));
+                                            .then(status => this.setState({ isSaving: false, consoleLogs: ['Your code has been saved successfully.', 'Ready to compile...'] }))
+                                            .catch(error => this.setState({ error, isSaving: false, consoleLogs: ['There was an error saving your code.'] }));
                             }}
                             height={this.state.editorSize}
-                            onChange={(content) => this.setState({ currentFileContent: content, codeHasBeenChanged:true, isSaving: true })}
+                            onChange={(content) => this.setState({ 
+                                currentFileContent: content, 
+                                codeHasBeenChanged: true, 
+                                isSaving: true, 
+                                consoleLogs: [],
+                                consoleStatus: { code: 'ready', message: getStatus('ready') }
+                            })}
                         />
                         <Terminal 
                             disabled={isPending(this.state.consoleStatus) || this.state.isSaving}
                             host={process.env.HOST}
-                            status={this.state.isSaving ? { code: 'saving', message: 'Saving Files'} : this.state.consoleStatus}
+                            status={this.state.isSaving ? { code: 'saving', message: getStatus('saving') } : this.state.consoleStatus}
                             logs={this.state.consoleLogs}
                             showTestBtn={!this.state.codeHasBeenChanged}
                             showOpenBtn={!this.state.codeHasBeenChanged}

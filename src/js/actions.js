@@ -18,10 +18,14 @@ export const loadSingleExercise = (exerciseSlug) =>
         fetch(process.env.HOST+'/exercise/'+exerciseSlug)
             .then(resp => resp.json())
             .then(files => {
-                if(Array.isArray(files) && files.length >0 ) resolve(files);
-                else throw new Error('No files where found on the currect exercise');
+                if(Array.isArray(files)) resolve(files);
+                else{
+                    reject('Invalid array of files found for the exercise');
+                    throw new Error('Invalid array of files found for the exercise');
+                } 
             })
             .catch((error) => {
+                reject('There seems to be an error connecting with the server');
                 throw new Error('There seems to be an error connecting with the server');
             })
     );

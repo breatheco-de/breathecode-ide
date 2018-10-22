@@ -7,6 +7,7 @@ export const getStatus = function(status='initializing'){
     case "testing": return "Testing your code...";
     case "pending": return "Working...";
     case "conecting": return "Conecting...";
+    case "saving": return "Saving Files...";
     
     case "ready": return "Ready to compile";
     case "compiler-error": return "Your code has errors";

@@ -12,12 +12,31 @@
         float: right;
     }
 }
-.bclogo{
-    width: 30px;
-    height: 30px;
+.credits{
     position: fixed;
-    right: 10px;
-    top: 5px;
+    font-size: 11px;
+    span{
+        float: right;
+        margin-left: 6px;
+    }
+    .bclogo{
+        width: 30px;
+        height: 30px;
+    }
+    &.top-right{
+        right: 10px;
+        top: 5px;
+    }
+    &.top-center{
+        left: 50vw;
+        top: 5px;
+        transform: translateX(-50%);
+    }
+    &.bottom-center{
+        left: 50vw;
+        bottom: 5px;
+        transform: translateX(-50%);
+    }
 }
 /* 
 
