@@ -5,7 +5,7 @@ import Readme from './components/readme/Readme.jsx';
 import Terminal from './components/terminal/Terminal.jsx';
 import SplitPane from 'react-split-pane';
 import Socket, { isPending, getStatus } from './socket';
-import { loadExercises, loadSingleExercise, loadFile, saveFile } from './actions';
+import Actions, { loadExercises, loadSingleExercise, loadFile, saveFile } from './actions';
 import Joyride from 'react-joyride';
 
 //create your first component
@@ -46,7 +46,7 @@ export class Home extends React.Component{
                     content: <span><h4>4) Deliver!</h4>After finishing all exercises run <code>$ bc deliver:exercises</code> on your command line to deliver the exercises into the breathecode platform.</span>,
                     placement: 'center'
                 }
-            ],          
+            ],
             editorSocket: null,
             editorSize: 450,
             codeHasBeenChanged: true,
@@ -65,7 +65,7 @@ export class Home extends React.Component{
             getIndex: (slug) => {
                 for(let i=0; i<this.state.exercises.length; i++)
                     if(this.state.exercises[i].slug == slug) return i;
-                    
+
                 return false;
             },
             next: () => {
@@ -81,6 +81,9 @@ export class Home extends React.Component{
         };
     }
     componentDidMount(){
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const HOST = process.env.HOST || urlParams.get('host') || null;
         loadExercises()
             .then((exercises) => {
                 this.setState({exercises, error: null });
@@ -91,8 +94,8 @@ export class Home extends React.Component{
         //check for changes on the hash
         window.addEventListener("hashchange", () => this.loadInstructions());
         if(window.location.hash && window.location.hash!='#') this.loadInstructions();
-        
-        Socket.start(process.env.HOST);
+
+        Socket.start(HOST);
         //connect to the compiler
         const compilerSocket = Socket.createScope('compiler');
         compilerSocket.whenUpdated((scope, data) => {
@@ -110,21 +113,21 @@ export class Home extends React.Component{
         if(!slug) slug = window.location.hash.slice(1,window.location.hash.length);
         if(slug=='' || slug=='/'){
             this.state.next();
-        } 
+        }
         else{
             loadSingleExercise(slug)
                 .then(files => {
                     let runHelp = this.state.getIndex(slug) == 1;
-                    this.setState({ 
-                        runHelp, 
-                        files, 
-                        currentSlug: slug, 
-                        consoleLogs: [], 
+                    this.setState({
+                        runHelp,
+                        files,
+                        currentSlug: slug,
+                        consoleLogs: [],
                         codeHasBeenChanged: true,
                         consoleStatus: { code: 'ready', message: getStatus('ready') }
                     });
-                    if(files.length > 0) loadFile(slug, files[0].name).then(content => this.setState({ 
-                        currentFileContent: content, 
+                    if(files.length > 0) loadFile(slug, files[0].name).then(content => this.setState({
+                        currentFileContent: content,
                         currentFileName: files[0].name
                     }));
                 })
@@ -143,7 +146,7 @@ export class Home extends React.Component{
                 init: 450
             }
         };
-        
+
         const LeftSide = (p) => (<div className={p.className}>
             <Joyride
                 steps={this.state.helpSteps}
@@ -174,27 +177,27 @@ export class Home extends React.Component{
                 {(this.state.previous()) ? <a className="prev-exercise" href={"#"+this.state.previous().slug}>Previous</a>:''}
                 {(this.state.next()) ? <a className="next-exercise" href={"#"+this.state.next().slug}>Next</a>:''}
             </div>
-            <Readme 
-                readme={this.state.currentInstructions ? this.state.currentInstructions : this.state.readme} 
-                exercises={this.state.exercises} 
+            <Readme
+                readme={this.state.currentInstructions ? this.state.currentInstructions : this.state.readme}
+                exercises={this.state.exercises}
             />
         </div>);
-        
+
         if(this.state.files.length == 0) return <LeftSide className="ml-5 mr-5" creditsPosition="bottom-center" />;
-        
+
         return (
             <SplitPane split="vertical" minSize={size.vertical.min} defaultSize={size.vertical.init}>
                 <LeftSide creditsPosition="top-right" />
                 <div>
-                    <SplitPane split="horizontal" 
-                        minSize={size.horizontal.min} 
+                    <SplitPane split="horizontal"
+                        minSize={size.horizontal.min}
                         defaultSize={size.horizontal.init}
                         onChange={ size => this.setState({editorSize: size}) }
                     >
-                        <Editor 
-                            files={this.state.files} 
-                            buffer={this.state.currentFileContent} 
-                            onOpen={(fileName) => loadFile(this.state.currentSlug,fileName).then(content => this.setState({ currentFileContent: content, currentFileName: fileName })) } 
+                        <Editor
+                            files={this.state.files}
+                            buffer={this.state.currentFileContent}
+                            onOpen={(fileName) => loadFile(this.state.currentSlug,fileName).then(content => this.setState({ currentFileContent: content, currentFileName: fileName })) }
                             showStatus={true}
                             onIdle={() => {
                                 saveFile(this.state.currentSlug, this.state.currentFileName, this.state.currentFileContent)
@@ -202,24 +205,24 @@ export class Home extends React.Component{
                                             .catch(error => this.setState({ error, isSaving: false, consoleLogs: ['There was an error saving your code.'] }));
                             }}
                             height={this.state.editorSize}
-                            onChange={(content) => this.setState({ 
-                                currentFileContent: content, 
-                                codeHasBeenChanged: true, 
-                                isSaving: true, 
+                            onChange={(content) => this.setState({
+                                currentFileContent: content,
+                                codeHasBeenChanged: true,
+                                isSaving: true,
                                 consoleLogs: [],
                                 consoleStatus: { code: 'ready', message: getStatus('ready') }
                             })}
                         />
-                        <Terminal 
+                        <Terminal
                             disabled={isPending(this.state.consoleStatus) || this.state.isSaving}
-                            host={process.env.HOST}
+                            host={HOST}
                             status={this.state.isSaving ? { code: 'saving', message: getStatus('saving') } : this.state.consoleStatus}
                             logs={this.state.consoleLogs}
                             showTestBtn={!this.state.codeHasBeenChanged}
                             showOpenBtn={!this.state.codeHasBeenChanged}
                             onCompile={() => this.state.compilerSocket.emit('build', { exerciseSlug: this.state.currentSlug })}
                             onTest={() => this.state.compilerSocket.emit('test', { exerciseSlug: this.state.currentSlug })}
-                            onOpen={() => window.open(process.env.HOST+'/preview')}
+                            onOpen={() => window.open(HOST+'/preview')}
                             height={window.innerHeight - this.state.editorSize}
                             exercise={this.state.currentSlug}
                         />
@@ -231,7 +234,7 @@ export class Home extends React.Component{
 }
 
 /*
-    onPrettify={() => this.state.compilerSocket.emit('prettify', { 
+    onPrettify={() => this.state.compilerSocket.emit('prettify', {
         fileName: this.state.currentFileName,
         exerciseSlug: this.state.currentSlug
     })}
