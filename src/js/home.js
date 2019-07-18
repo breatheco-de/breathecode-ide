@@ -5,15 +5,16 @@ import Readme from './components/readme/Readme.jsx';
 import Terminal from './components/terminal/Terminal.jsx';
 import SplitPane from 'react-split-pane';
 import Socket, { isPending, getStatus } from './socket';
-import Actions, { loadExercises, loadSingleExercise, loadFile, saveFile } from './actions';
+import { getHost, loadExercises, loadSingleExercise, loadFile, saveFile } from './actions.js';
 import Joyride from 'react-joyride';
+import { Session } from 'bc-react-session';
 
 //create your first component
 export class Home extends React.Component{
     constructor(){
         super();
         this.state = {
-            runHelp: false,
+            host: getHost(),
             helpSteps: [
                 {
                     target: '.bc-readme',
@@ -81,33 +82,38 @@ export class Home extends React.Component{
         };
     }
     componentDidMount(){
+        if(this.state.host){
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const HOST = process.env.HOST || urlParams.get('host') || null;
-        loadExercises()
-            .then((exercises) => {
-                this.setState({exercises, error: null });
-                if(!window.location.hash || window.location.hash == '#') this.loadInstructions(exercises[0].slug);
-            })
-            .catch(error => this.setState({ error }));
+            const session = Session.getSession();
+            if(!session.active) Session.start({ showHelp: true });
+            else if(typeof session.payload.showHelp === 'undefined') Session.setPayload({ showHelp:true });
 
-        //check for changes on the hash
-        window.addEventListener("hashchange", () => this.loadInstructions());
-        if(window.location.hash && window.location.hash!='#') this.loadInstructions();
+            loadExercises()
+                .then((exercises) => {
+                    console.log("Exercises: ", exercises);
+                    this.setState({ exercises, error: null });
+                    if(!window.location.hash || window.location.hash == '#') this.loadInstructions(exercises[0].slug);
+                })
+                .catch(error => this.setState({ error }));
 
-        Socket.start(HOST);
-        //connect to the compiler
-        const compilerSocket = Socket.createScope('compiler');
-        compilerSocket.whenUpdated((scope, data) => {
-            let state = { consoleLogs: scope.logs, consoleStatus: scope.status };
-            if(typeof data.code == 'string') state.currentFileContent = data.code;
-            this.setState(state);
-        });
-        compilerSocket.onStatus('compiler-success', () => {
-            loadFile(this.state.currentSlug, this.state.currentFileName)
-                .then(content => this.setState({ currentFileContent: content, codeHasBeenChanged: false }));
-        });
-        this.setState({ compilerSocket });
+            //check for changes on the hash
+            window.addEventListener("hashchange", () => this.loadInstructions());
+            if(window.location.hash && window.location.hash!='#') this.loadInstructions();
+
+            //connect to the compiler
+            Socket.start(this.state.host);
+            const compilerSocket = Socket.createScope('compiler');
+            compilerSocket.whenUpdated((scope, data) => {
+                let state = { consoleLogs: scope.logs, consoleStatus: scope.status };
+                if(typeof data.code == 'string') state.currentFileContent = data.code;
+                this.setState(state);
+            });
+            compilerSocket.onStatus('compiler-success', () => {
+                loadFile(this.state.currentSlug, this.state.currentFileName)
+                    .then(content => this.setState({ currentFileContent: content, codeHasBeenChanged: false }));
+            });
+            this.setState({ compilerSocket });
+        }
     }
     loadInstructions(slug=null){
         if(!slug) slug = window.location.hash.slice(1,window.location.hash.length);
@@ -117,9 +123,11 @@ export class Home extends React.Component{
         else{
             loadSingleExercise(slug)
                 .then(files => {
-                    let runHelp = this.state.getIndex(slug) == 1;
+
+                    const { runHelp } = Session.getPayload();
+                    console.log("Run help: ",runHelp);
                     this.setState({
-                        runHelp,
+                        runHelp: runHelp && this.state.getIndex(slug) === 1,
                         files,
                         currentSlug: slug,
                         consoleLogs: [],
@@ -136,6 +144,8 @@ export class Home extends React.Component{
         }
     }
     render(){
+        const { runHelp } = Session.getPayload();
+        if(!this.state.host) return (<div className="alert alert-danger text-center"> ⚠️ No host specified for the application</div>);
         const size = {
             vertical: {
                 min: 50,
@@ -151,7 +161,7 @@ export class Home extends React.Component{
             <Joyride
                 steps={this.state.helpSteps}
                 continuous={true}
-                run={this.state.runHelp}
+                run={runHelp === true}
                 locale={{ back: 'Previous', close: 'Close', last: 'Finish', next: 'Next' }}
                 styles={{
                     options: {
@@ -162,7 +172,7 @@ export class Home extends React.Component{
                 callback = {(tour) => {
                     const { type } = tour;
                     if (type === 'tour:end') {
-                        this.setState({ runHelp: false });
+                        Session.setPayload({ runHelp: false });
                     }
                 }}
             />
@@ -215,14 +225,14 @@ export class Home extends React.Component{
                         />
                         <Terminal
                             disabled={isPending(this.state.consoleStatus) || this.state.isSaving}
-                            host={HOST}
+                            host={this.state.host}
                             status={this.state.isSaving ? { code: 'saving', message: getStatus('saving') } : this.state.consoleStatus}
                             logs={this.state.consoleLogs}
                             showTestBtn={!this.state.codeHasBeenChanged}
                             showOpenBtn={!this.state.codeHasBeenChanged}
                             onCompile={() => this.state.compilerSocket.emit('build', { exerciseSlug: this.state.currentSlug })}
                             onTest={() => this.state.compilerSocket.emit('test', { exerciseSlug: this.state.currentSlug })}
-                            onOpen={() => window.open(HOST+'/preview')}
+                            onOpen={() => window.open(this.state.host+'/preview')}
                             height={window.innerHeight - this.state.editorSize}
                             exercise={this.state.currentSlug}
                         />

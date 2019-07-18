@@ -1,44 +1,65 @@
 /* global fetch */
 
-export default {
-    HOST: null,
-    loadExercises = () =>
-        new Promise((resolve, reject) =>
-            fetch(this.HOST+'/exercise')
-                .then(resp => resp.json())
+const urlParams = new URLSearchParams(window.location.search);
+const HOST = process.env.HOST || urlParams.get('host') || null;
+
+const actions = {
+    getHost: function(){
+        return HOST;
+    },
+    loadExercises: function(){
+        return new Promise((resolve, reject) =>
+            fetch(HOST+'/exercise')
+                .then(resp => {
+                    if(resp.ok) return resp.json();
+                    else throw new Error('There seems to be an error connecting with the server');
+                })
                 .then(exercises => {
                     if(Array.isArray(exercises) && exercises.length >0 ) resolve(exercises);
                     else throw new Error('No exercises where found on the currect directory');
                 })
                 .catch((error) => {
-                    throw new Error('There seems to be an error connecting with the server');
+                    reject(error);
                 })
-        ),
-    loadSingleExercise = (exerciseSlug) =>
-        new Promise((resolve, reject) =>
-            fetch(this.HOST+'/exercise/'+exerciseSlug)
-                .then(resp => resp.json())
+        );
+    },
+    loadSingleExercise: function(exerciseSlug){
+        return new Promise((resolve, reject) =>
+            fetch(HOST+'/exercise/'+exerciseSlug)
+                .then(resp => {
+                    if(resp.ok) return resp.json();
+                    else throw new Error('There seems to be an error connecting with the server');
+                })
                 .then(files => {
                     if(Array.isArray(files)) resolve(files);
                     else{
-                        reject('Invalid array of files found for the exercise');
-                        throw new Error('Invalid array of files found for the exercise');
+                        console.log("Single exercise: ", files);
+                        throw new Error('Invalid array of files found for the exercise', files);
                     }
                 })
                 .catch((error) => {
-                    reject('There seems to be an error connecting with the server');
-                    throw new Error('There seems to be an error connecting with the server');
+                    reject(error);
                 })
-        ),
-    loadFile = (exerciseSlug, fileName) => new Promise((resolve, reject) =>
-        fetch(this.HOST+'/exercise/'+exerciseSlug+'/file/'+fileName).then(resp => {
-            resolve(resp.text());
-        })
-        .catch(error => reject(error))
-    ),
-    saveFile = (exerciseSlug, fileName, content) =>
-        fetch(this.HOST+'/exercise/'+exerciseSlug+'/file/'+fileName,{
-            method: 'PUT',
-            body: content
-        })
+        );
+    },
+    loadFile: function(exerciseSlug, file){
+        return new Promise((resolve, reject) =>
+            fetch(HOST+'/exercise/'+exerciseSlug+'/file/'+(file.name || file)).then(resp => {
+                resolve(resp.text());
+            })
+            .catch(error => reject(error))
+        );
+    },
+    saveFile: function(exerciseSlug, file, content){
+        return new Promise((resolve, reject) =>
+            fetch(HOST+'/exercise/'+exerciseSlug+'/file/'+(file.name || file),{
+                method: 'PUT',
+                body: content
+            })
+            .then(resp => resolve(resp.text()))
+            .catch(error => reject(error))
+        );
+    }
 };
+
+export const {getHost, loadExercises, loadSingleExercise, loadFile, saveFile } = actions;

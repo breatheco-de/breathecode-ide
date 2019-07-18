@@ -8,7 +8,7 @@ export const getStatus = function(status='initializing'){
     case "pending": return "Working...";
     case "conecting": return "Conecting...";
     case "saving": return "Saving Files...";
-    
+
     case "ready": return "Ready to compile";
     case "compiler-error": return "Your code has errors";
     case "compiler-warning": return "Your code compiled, but with some warnings";
@@ -33,7 +33,7 @@ export default {
         this.socket = io.connect(host);
     },
     createScope: function(scopeName){
-        
+
         const scope = {
             socket: this.socket,
             name: scopeName,
@@ -63,7 +63,7 @@ export default {
                 this.updatedCallback = callBack;
             }
         };
-        
+
         this.socket.on(scopeName,  (data) => {
 
             if(data.logs) scope.logs = scope.logs.concat(data.logs);
@@ -71,12 +71,12 @@ export default {
                 code: data.status,
                 message: getStatus(data.status)
             };
-            
+
             if(typeof scope.actionCallBacks[data.action] == 'function') scope.actionCallBacks[data.action](data, scope);
             if(typeof scope.statusCallBacks[data.status] == 'function') scope.statusCallBacks[data.status](data, scope);
             if(scope.updatedCallback) console.log(data) | scope.updatedCallback(scope, data);
         });
-        
+
         return scope;
     }
 };
