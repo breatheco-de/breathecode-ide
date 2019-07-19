@@ -1,6 +1,18 @@
 @import '~bootstrap/scss/bootstrap.scss';
+@import '~@breathecode/ui-components/dist/main.css';
 @import 'split-pane.scss';
 
+body{
+    font-family: Verdana, Geneva, sans-serif;
+}
+.bc-readme{
+    height: calc(100vh - 40px);
+    overflow-y: auto;
+    font-size: 16px;
+    h1{ font-size: 28px; }
+    h2{ font-size: 22px; }
+    h3{ font-size: 18px; }
+}
 .prev-next-bar{
     overflow: hidden;
     margin-bottom: 10px;
@@ -15,6 +27,7 @@
 .credits{
     position: fixed;
     font-size: 11px;
+    z-index: 10;
     span{
         float: right;
         margin-left: 6px;
@@ -38,14 +51,14 @@
         transform: translateX(-50%);
     }
 }
-/* 
+/*
 
     You can write your own styles here...
-    
-    
-    ...Or you can use the import command to include 
+
+
+    ...Or you can use the import command to include
     other sylesheets into your bunde as well, e.j:
-    
+
     import 'relative/path/to/stylesheet.scss';
 
 */

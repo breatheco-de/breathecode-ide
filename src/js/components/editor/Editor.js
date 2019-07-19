@@ -29,6 +29,7 @@ export default class Editor extends React.Component {
   }
   editorDidMount(editor, monaco) {
     console.log('editorDidMount', editor);
+    if(Array.isArray(this.props.files) && this.props.files.length > 0) this.setState({ language: this.props.files[0].name.split('.').pop() });
     editor.focus();
   }
   onChange(newValue, e) {

@@ -1,9 +1,9 @@
 import React from 'react';
 import logo from '../img/breathecode.png';
-import Editor from './components/editor/Editor.jsx';
-import Readme from './components/readme/Readme.jsx';
-import Terminal from './components/terminal/Terminal.jsx';
+import Editor from './components/editor/Editor.js';
+import Terminal from './components/terminal/Terminal.js';
 import SplitPane from 'react-split-pane';
+import { MarkdownParser } from "@breathecode/ui-components";
 import Socket, { isPending, getStatus } from './socket';
 import { getHost, loadExercises, loadSingleExercise, loadFile, saveFile } from './actions.js';
 import Joyride from 'react-joyride';
@@ -85,7 +85,7 @@ export class Home extends React.Component{
         if(this.state.host){
 
             const session = Session.getSession();
-            if(!session.active) Session.start({ showHelp: true });
+            if(!session.active) Session.start({ payload: { showHelp: true } });
             else if(typeof session.payload.showHelp === 'undefined') Session.setPayload({ showHelp:true });
 
             loadExercises()
@@ -123,11 +123,7 @@ export class Home extends React.Component{
         else{
             loadSingleExercise(slug)
                 .then(files => {
-
-                    const { runHelp } = Session.getPayload();
-                    console.log("Run help: ",runHelp);
                     this.setState({
-                        runHelp: runHelp && this.state.getIndex(slug) === 1,
                         files,
                         currentSlug: slug,
                         consoleLogs: [],
@@ -144,7 +140,7 @@ export class Home extends React.Component{
         }
     }
     render(){
-        const { runHelp } = Session.getPayload();
+        const { showHelp } = Session.getPayload();
         if(!this.state.host) return (<div className="alert alert-danger text-center"> ⚠️ No host specified for the application</div>);
         const size = {
             vertical: {
@@ -161,7 +157,7 @@ export class Home extends React.Component{
             <Joyride
                 steps={this.state.helpSteps}
                 continuous={true}
-                run={runHelp === true}
+                run={showHelp === true && this.state.getIndex(this.state.currentSlug) === 1}
                 locale={{ back: 'Previous', close: 'Close', last: 'Finish', next: 'Next' }}
                 styles={{
                     options: {
@@ -172,7 +168,7 @@ export class Home extends React.Component{
                 callback = {(tour) => {
                     const { type } = tour;
                     if (type === 'tour:end') {
-                        Session.setPayload({ runHelp: false });
+                        Session.setPayload({ showHelp: false });
                     }
                 }}
             />
@@ -187,10 +183,7 @@ export class Home extends React.Component{
                 {(this.state.previous()) ? <a className="prev-exercise" href={"#"+this.state.previous().slug}>Previous</a>:''}
                 {(this.state.next()) ? <a className="next-exercise" href={"#"+this.state.next().slug}>Next</a>:''}
             </div>
-            <Readme
-                readme={this.state.currentInstructions ? this.state.currentInstructions : this.state.readme}
-                exercises={this.state.exercises}
-            />
+            <MarkdownParser className="markdown" source={this.state.currentInstructions ? this.state.currentInstructions : this.state.readme} />
         </div>);
 
         if(this.state.files.length == 0) return <LeftSide className="ml-5 mr-5" creditsPosition="bottom-center" />;
