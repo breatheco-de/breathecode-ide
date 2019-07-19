@@ -90,11 +90,10 @@ export class Home extends React.Component{
 
             loadExercises()
                 .then((exercises) => {
-                    console.log("Exercises: ", exercises);
                     this.setState({ exercises, error: null });
                     if(!window.location.hash || window.location.hash == '#') this.loadInstructions(exercises[0].slug);
                 })
-                .catch(error => this.setState({ error }));
+                .catch(error => this.setState({ error: "There was an error loading the excercise list from "+this.state.host }));
 
             //check for changes on the hash
             window.addEventListener("hashchange", () => this.loadInstructions());
@@ -135,13 +134,14 @@ export class Home extends React.Component{
                         currentFileName: files[0].name
                     }));
                 })
-                .catch(error => this.setState({ error }));
+                .catch(error => this.setState({ error: "There was an error loading the exercise: "+slug }));
             loadFile(slug,'README.md').then(readme => this.setState({ readme }));
         }
     }
     render(){
         const { showHelp } = Session.getPayload();
         if(!this.state.host) return (<div className="alert alert-danger text-center"> ⚠️ No host specified for the application</div>);
+        if(this.state.error) return <div className="alert alert-danger">{this.state.error}</div>;
         const size = {
             vertical: {
                 min: 50,
@@ -176,9 +176,6 @@ export class Home extends React.Component{
                 <img className={"bclogo"} src={logo} />
                 <span>Made with love <br/> by <a href="https://breatheco.de" target="_blank" rel="noopener noreferrer">BreatheCode</a></span>
             </div>
-            {(this.state.error) ?
-                <div className="alert alert-danger">{this.state.error}</div>:''
-            }
             <div className="prev-next-bar">
                 {(this.state.previous()) ? <a className="prev-exercise" href={"#"+this.state.previous().slug}>Previous</a>:''}
                 {(this.state.next()) ? <a className="next-exercise" href={"#"+this.state.next().slug}>Next</a>:''}
@@ -205,7 +202,7 @@ export class Home extends React.Component{
                             onIdle={() => {
                                 saveFile(this.state.currentSlug, this.state.currentFileName, this.state.currentFileContent)
                                             .then(status => this.setState({ isSaving: false, consoleLogs: ['Your code has been saved successfully.', 'Ready to compile...'] }))
-                                            .catch(error => this.setState({ error, isSaving: false, consoleLogs: ['There was an error saving your code.'] }));
+                                            .catch(error => this.setState({ isSaving: false, consoleLogs: ['There was an error saving your code.'] }));
                             }}
                             height={this.state.editorSize}
                             onChange={(content) => this.setState({

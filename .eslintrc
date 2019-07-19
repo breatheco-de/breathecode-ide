@@ -14,8 +14,9 @@
   "rules": {
     "strict":0,
     "no-unused-vars": 0,
-    "no-console": 1,
+    "no-console": 0,
     "no-process-env": 0,
+    "no-unreachable": 0,
     "semi": ["error", "always"],
     "allowImportExportEverywhere": false,
     "comma-dangle": [1, { //when to use the last comma
