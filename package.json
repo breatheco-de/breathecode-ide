@@ -11,7 +11,9 @@
     "compress": "node targify.js",
     "deploy": "node deploy-to-github.js"
   },
-  "pre-commit": [ "compress" ],
+  "pre-commit": [
+    "compress"
+  ],
   "author": "Alejandro Sanchez",
   "license": "ISC",
   "devDependencies": {
@@ -36,6 +38,7 @@
     "react-svg-loader": "^2.1.0",
     "remote-origin-url": "^1.0.0",
     "sass-loader": "^6.0.6",
+    "simple-git": "^1.122.0",
     "style-loader": "^0.19.0",
     "targz": "^1.0.1",
     "webpack": "^4.0.1",

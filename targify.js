@@ -1,4 +1,5 @@
 var targz = require('targz');
+const simpleGit = require('simple-git')();
 
 // compress files into tar.gz archive
 targz.compress({
@@ -8,6 +9,7 @@ targz.compress({
     if(err) {
         console.log(err);
     } else {
+        simpleGit.add('./dist/app.tar.gz');
         console.log("Done!");
     }
 });
