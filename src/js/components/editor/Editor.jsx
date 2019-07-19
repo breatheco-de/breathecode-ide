@@ -1,8 +1,15 @@
+/*eslint no-useless-escape: 0 */
 import React from 'react';
 import MonacoEditor from 'react-monaco-editor';
 import PropTypes from 'prop-types';
 import './editor.scss';
 
+const languages = {
+    js: "javascript",
+    css: "css",
+    jsx: "javascript",
+    html: "html"
+};
 const StatusBar = ({status}) => (<span className="editor-status">{status}</span>);
 StatusBar.propTypes = {
   status: PropTypes.string,
@@ -16,7 +23,8 @@ export default class Editor extends React.Component {
     this.state = {
       code: '// type your code...',
       status: 'idle',
-      lastUpdate: null
+      lastUpdate: null,
+      language: "js"
     };
   }
   editorDidMount(editor, monaco) {
@@ -32,14 +40,19 @@ export default class Editor extends React.Component {
         if((NOW - this.state.lastUpdate) > this.props.idleTimeFrame){
           this.props.onIdle();
           this.setState({ status: 'idle' });
-        } 
+        }
       },this.props.idleTimeFrame);
     }
   }
-  
+
   render() {
     const tabs = this.props.files.map((f,i) => (<li key={i} className="nav-item">
-        <button className="nav-link" onClick={() => this.props.onOpen(f)}>
+        <button className="nav-link" onClick={() => {
+            const extension = f.name.split('.').pop();
+            console.log(extension);
+            this.setState({ language: extension });
+            this.props.onOpen(f);
+        }}>
             {f.name}
         </button>
     </li>));
@@ -51,7 +64,7 @@ export default class Editor extends React.Component {
         <MonacoEditor
             width={window.innerWidth}
             height={this.props.height}
-            language="javascript"
+            language={languages[this.state.language]}
             theme="vs-dark"
             value={this.props.buffer}
             options={{
@@ -77,7 +90,7 @@ Editor.defaultProps = {
   idleTimeFrame: 1000,
   showStatus: true,
   onIdle: null,
-  buffer: null, 
-  height: null, 
+  buffer: null,
+  height: null,
   files: []
 };
