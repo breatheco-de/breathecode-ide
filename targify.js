@@ -8,8 +8,10 @@ targz.compress({
 }, function(err){
     if(err) {
         console.log(err);
+        process.exit(1);
     } else {
         simpleGit.add('./dist/app.tar.gz');
         console.log("Done!");
+        process.exit(0);
     }
 });
