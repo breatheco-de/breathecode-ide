@@ -11,7 +11,7 @@ targz.compress({
         process.exit(1);
     } else {
         simpleGit.add('./dist/app.tar.gz');
-        console.log("Done!");
+        console.log("Successfully compresed!");
         process.exit(0);
     }
 });
