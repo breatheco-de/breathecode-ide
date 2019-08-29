@@ -1,6 +1,12 @@
 var targz = require('targz');
 const simpleGit = require('simple-git')();
+var fs = require('fs');
 
+if (!fs.existsSync("./public/0.bundle.js")) {
+    console.log(`Error! You need to build the application first`);
+    process.exit(1);
+    return;
+}
 // compress files into tar.gz archive
 targz.compress({
     src: './public',
