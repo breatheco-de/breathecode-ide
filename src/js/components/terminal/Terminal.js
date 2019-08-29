@@ -19,50 +19,17 @@ export default class Terminal extends React.Component {
     return (<div className="bc-terminal">
         {(this.props.status) ? <Bar status={this.props.status} />:''}
         <div className="button-bar">
-            {(this.props.onCompile && this.props.showCompileBtn)?
-                <button 
+            {this.props.actions.map(a =>
+                <button key={a.slug}
                   disabled={this.props.disabled}
-                  data-toggle="tooltip" data-placement="top" title="Build"
-                  className="btn" 
-                  onClick={() => this.props.onCompile()}
+                  data-toggle="tooltip" data-placement="top" title={a.label}
+                  className="btn"
+                  onClick={() => this.props.onAction && this.props.onAction(a)}
                 >
-                    <i className="fas fa-box-open"></i>
-                    <small>Build</small>
-                </button>:''
-            }
-            {(this.props.onPrettify)?
-                <button 
-                  disabled={this.props.disabled}
-                  data-toggle="tooltip" data-placement="top" title="Pretty"
-                  className="btn" 
-                  onClick={() => this.props.onPrettify()}
-                >
-                    <i className="fas fa-paint-brush"></i>
-                    <small>Pretty</small>
-                </button>:''
-            }
-            {(this.props.onOpen && this.props.showOpenBtn)?
-                <button 
-                  disabled={this.props.disabled}
-                  data-toggle="tooltip" data-placement="top" title="Open"
-                  className="btn" 
-                  onClick={() => this.props.onOpen()}
-                >
-                    <i className="fas fa-play"></i>
-                    <small>Preview</small>
-                </button>:''
-            }
-            {(this.props.onTest && this.props.showTestBtn)?
-                <button 
-                  disabled={this.props.disabled}
-                  data-toggle="tooltip" data-placement="top" title="Open"
-                  className="btn" 
-                  onClick={() => this.props.onTest()}
-                >
-                    <i className="fas fa-check"></i>
-                    <small>Test</small>
-                </button>:''
-            }
+                    <i className={a.icon}></i>
+                    <small>{a.label}</small>
+                </button>
+            )}
         </div>
         <ul className="logs" style={{height: this.props.height}}>
             {this.props.logs.map((log,i)=>(
@@ -81,24 +48,14 @@ Terminal.propTypes = {
   logs: PropTypes.array,
   height: PropTypes.number,
   disabled: PropTypes.bool,
-  onCompile: PropTypes.func,
-  showTestBtn: PropTypes.bool,
-  showOpenBtn: PropTypes.bool,
-  showCompileBtn: PropTypes.bool,
-  onPrettify: PropTypes.func,
-  onTest: PropTypes.func,
-  onOpen: PropTypes.func
+  onAction: PropTypes.func,
+  actions: PropTypes.array,
 };
 Terminal.defaultProps = {
   status: '',
   logs: [],
+  actions: [],
   height: null,
   disabled: true,
-  showTestBtn: true,
-  showCompileBtn: true,
-  showOpenBtn: true,
-  onCompile: null,
-  onTest: null,
-  onPrettify: null,
-  onOpen: null
+  onAction: null
 };

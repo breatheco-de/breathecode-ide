@@ -8,6 +8,8 @@ const languages = {
     js: "javascript",
     css: "css",
     jsx: "javascript",
+    py: "python",
+    java: "java",
     html: "html"
 };
 const StatusBar = ({status}) => (<span className="editor-status">{status}</span>);

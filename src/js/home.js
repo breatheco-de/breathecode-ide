@@ -9,6 +9,14 @@ import { getHost, loadExercises, loadSingleExercise, loadFile, saveFile } from '
 import Joyride from 'react-joyride';
 import { Session } from 'bc-react-session';
 
+const actions = [
+    { slug: 'build', label: 'Build', icon: 'fas fa-box-open' },
+    { slug: 'run', label: 'Compile', icon: 'fas fa-play' },
+    { slug: 'preview', label: 'Preview', icon: 'fas fa-play' },
+    { slug: 'pretty', label: 'Pretty', icon: 'fas fa-paint-brush' },
+    { slug: 'test', label: 'Test', icon: 'fas fa-check' }
+];
+
 //create your first component
 export class Home extends React.Component{
     constructor(){
@@ -62,6 +70,7 @@ export class Home extends React.Component{
             currentInstructions: null,
             currentFileContent: null,
             currentFileName: null,
+            possibleActions: [],
             readme: '',
             getIndex: (slug) => {
                 for(let i=0; i<this.state.exercises.length; i++)
@@ -103,7 +112,7 @@ export class Home extends React.Component{
             Socket.start(this.state.host);
             const compilerSocket = Socket.createScope('compiler');
             compilerSocket.whenUpdated((scope, data) => {
-                let state = { consoleLogs: scope.logs, consoleStatus: scope.status };
+                let state = { consoleLogs: scope.logs, consoleStatus: scope.status, possibleActions: actions.filter(a => data.allowed.includes(a.slug)) };
                 if(typeof data.code == 'string') state.currentFileContent = data.code;
                 this.setState(state);
             });
@@ -218,11 +227,11 @@ export class Home extends React.Component{
                             host={this.state.host}
                             status={this.state.isSaving ? { code: 'saving', message: getStatus('saving') } : this.state.consoleStatus}
                             logs={this.state.consoleLogs}
-                            showTestBtn={!this.state.codeHasBeenChanged}
-                            showOpenBtn={!this.state.codeHasBeenChanged}
-                            onCompile={() => this.state.compilerSocket.emit('build', { exerciseSlug: this.state.currentSlug })}
-                            onTest={() => this.state.compilerSocket.emit('test', { exerciseSlug: this.state.currentSlug })}
-                            onOpen={() => window.open(this.state.host+'/preview')}
+                            actions={this.state.possibleActions}
+                            onAction={(a) => {
+                                if(a.slug === 'preview') window.open(this.state.host+'/preview');
+                                else this.state.compilerSocket.emit(a.slug, { exerciseSlug: this.state.currentSlug });
+                            }}
                             height={window.innerHeight - this.state.editorSize}
                             exercise={this.state.currentSlug}
                         />

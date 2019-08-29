@@ -10,18 +10,18 @@
         border: #BDBDBD solid 1px;
         border-left: 0px;
         border-right: 0px;
-        &.compiler-error, &.testing-error{ 
-            background: #ee5959; 
+        &.compiler-error, &.testing-error{
+            background: #ee5959;
             height: 6px;
-            .status{ 
-                background: #ee5959; 
+            .status{
+                background: #ee5959;
                 color: black;
             }
         }
         &.compiler-warning{ background: orange; height: 6px; }
         &.compiler-success, &.testing-success{ background: green; height: 6px; }
         .status{
-            font-size: 11px;
+            font-size: 17px;
             padding: 3px 5px;
             position: absolute;
             left: auto;
@@ -39,7 +39,7 @@
         z-index: 3;
         button{
             margin-right: 5px;
-            small{ 
+            small{
                 display: block;
                 font-size: 9px;
                 margin-top: -4px;

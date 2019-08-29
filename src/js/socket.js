@@ -1,31 +1,41 @@
 import io from 'socket.io-client';
 
 export const getStatus = function(status='initializing'){
-  switch(status){
-    case "initializing": return "Setting up the coding environment";
-    case "compiling": return "Building your code...";
-    case "testing": return "Testing your code...";
-    case "pending": return "Working...";
-    case "conecting": return "Conecting...";
-    case "saving": return "Saving Files...";
+    const good = () => {
+        const icons = ['🤩','🙂','😃','😎','🤓','😍','🤗','👌🏽' ];
+        const messages = ['Yeah!', 'Wuju!', 'OMG!', 'YUUUUPPPIII!', 'Congrats!', 'Way to go!', "I'm soooo happy!", "Nice!", "I'm sooo happy for you", "For now...", "Maybe you are smart?", "Coding is your thing", "You are good at this"];
+        return `${icons[Math.floor(Math.random() * Math.floor(icons.length))]} ${messages[Math.floor(Math.random() * Math.floor(messages.length))]}`;
+    };
+    const bad = () => {
+        const icons = [ '🤮','🤢','🤐','🤬','😡','😵','🤷🏽‍♂️','🤷🏻‍♀️','😬','😭','😤' ];
+        const messages = ["Don't panic", "Keep trying!", "Different error == good news", "Keep going!", "Never give up", "No pain no gain"];
+        return `${icons[Math.floor(Math.random() * Math.floor(icons.length))]} ${messages[Math.floor(Math.random() * Math.floor(messages.length))]}`;
+    };
+    switch(status){
+        case "initializing": return "Setting up the coding environment";
+        case "compiling": return "💼 Building your code...";
+        case "testing": return "👀 Testing your code...";
+        case "pending": return "👩‍💻 Working...";
+        case "conecting": return "📳 Conecting...";
+        case "saving": return "💾 Saving Files...";
 
-    case "ready": return "Ready to compile";
-    case "compiler-error": return "Your code has errors";
-    case "compiler-warning": return "Your code compiled, but with some warnings";
-    case "compiler-success": return "Congrats! Was successfully built.";
-    case "testing-error": return "Bad news! Your output is not as expected";
-    case "testing-success": return "Great! Your code output matches what was expected";
-    case "internal-error": return "Woops! There has been an internal error";
-    case "prettifying": return "Making code prettier";
-    case "prettify-success": return "Look how beautiful your code is now";
-    case "prettify-error": return "Warning! Unable to prettify and save";
-    default: throw new Error('Invalid status: '+status);
-  }
+        case "ready": return "🐶 Ready to compile";
+        case "compiler-error": return `${bad()} Your code has errors`;
+        case "compiler-warning": return "⚠️ Your code compiled, but with some warnings";
+        case "compiler-success": return `Successfully built. ${good()}`;
+        case "testing-error": return `Not as expected ${bad()}`;
+        case "testing-success": return `Everything as expected ${good()}`;
+        case "internal-error": return " 🔥💻 Woops! There has been an internal error";
+        case "prettifying": return "Making code prettier";
+        case "prettify-success": return "Look how beautiful your code is now";
+        case "prettify-error": return "Warning! Unable to prettify and save";
+        default: throw new Error('Invalid status: '+status);
+    }
 };
 
 export const isPending = (status) => (status) ? (['initializing', 'compiling', 'testing', 'pending', 'conecting' ].indexOf(status.code || status) > 0) : true;
 
-const actions = ['build','prettify', 'test'];
+const actions = ['build','prettify', 'test', 'run'];
 
 export default {
     socket: null,
@@ -74,7 +84,7 @@ export default {
 
             if(typeof scope.actionCallBacks[data.action] == 'function') scope.actionCallBacks[data.action](data, scope);
             if(typeof scope.statusCallBacks[data.status] == 'function') scope.statusCallBacks[data.status](data, scope);
-            if(scope.updatedCallback) console.log(data) | scope.updatedCallback(scope, data);
+            if(scope.updatedCallback) console.log(scopeName+" event: ",data) | scope.updatedCallback(scope, data);
         });
 
         return scope;
