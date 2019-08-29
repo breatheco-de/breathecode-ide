@@ -7,7 +7,7 @@ export const getStatus = function(status='initializing'){
         return `${icons[Math.floor(Math.random() * Math.floor(icons.length))]} ${messages[Math.floor(Math.random() * Math.floor(messages.length))]}`;
     };
     const bad = () => {
-        const icons = [ '🤮','🤢','🤐','🤬','😡','😵','🤷🏽‍♂️','🤷🏻‍♀️','😬','😭','😤' ];
+        const icons = [ '🤮','🤢','🤐','🤬','😡','😵','🤷🏽‍♂️','🤷🏻‍♀️','😬','😭','😤', '🤭', '🤒', '💩', '🧟‍♂️', '🧟‍♀️' ];
         const messages = ["Don't panic", "Keep trying!", "Different error == good news", "Keep going!", "Never give up", "No pain no gain"];
         return `${icons[Math.floor(Math.random() * Math.floor(icons.length))]} ${messages[Math.floor(Math.random() * Math.floor(messages.length))]}`;
     };
