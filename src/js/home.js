@@ -70,6 +70,7 @@ export class Home extends React.Component{
             currentInstructions: null,
             currentFileContent: null,
             currentFileName: null,
+            currentFileExtension: null,
             possibleActions: [],
             readme: '',
             getIndex: (slug) => {
@@ -140,7 +141,9 @@ export class Home extends React.Component{
                     });
                     if(files.length > 0) loadFile(slug, files[0].name).then(content => this.setState({
                         currentFileContent: content,
-                        currentFileName: files[0].name
+                        currentFileName: files[0].name,
+                        possibleActions: this.state.possibleActions.filter(a => a.slug !== 'preview'),
+                        currentFileExtension: files[0].name.split('.').pop()
                     }));
                 })
                 .catch(error => this.setState({ error: "There was an error loading the exercise: "+slug }));
@@ -205,8 +208,9 @@ export class Home extends React.Component{
                     >
                         <Editor
                             files={this.state.files}
+                            language={this.state.currentFileExtension}
                             buffer={this.state.currentFileContent}
-                            onOpen={(fileName) => loadFile(this.state.currentSlug,fileName).then(content => this.setState({ currentFileContent: content, currentFileName: fileName })) }
+                            onOpen={(fileName) => loadFile(this.state.currentSlug,fileName).then(content => this.setState({ currentFileContent: content, currentFileName: fileName.name, currentFileExtension: fileName.name.split('.').pop() })) }
                             showStatus={true}
                             onIdle={() => {
                                 saveFile(this.state.currentSlug, this.state.currentFileName, this.state.currentFileContent)

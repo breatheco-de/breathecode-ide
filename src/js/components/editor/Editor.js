@@ -25,8 +25,7 @@ export default class Editor extends React.Component {
     this.state = {
       code: '// type your code...',
       status: 'idle',
-      lastUpdate: null,
-      language: "js"
+      lastUpdate: null
     };
   }
   editorDidMount(editor, monaco) {
@@ -51,9 +50,6 @@ export default class Editor extends React.Component {
   render() {
     const tabs = this.props.files.map((f,i) => (<li key={i} className="nav-item">
         <button className="nav-link" onClick={() => {
-            const extension = f.name.split('.').pop();
-            console.log(extension);
-            this.setState({ language: extension });
             this.props.onOpen(f);
         }}>
             {f.name}
@@ -67,7 +63,7 @@ export default class Editor extends React.Component {
         <MonacoEditor
             width={window.innerWidth}
             height={this.props.height}
-            language={languages[this.state.language]}
+            language={languages[this.props.language]}
             theme="vs-dark"
             value={this.props.buffer}
             options={{
@@ -86,6 +82,7 @@ Editor.propTypes = {
   showStatus: PropTypes.bool,
   idleTimeFrame: PropTypes.number,
   onOpen: PropTypes.func,
+  language: PropTypes.string,
   onChange: PropTypes.func,
   onIdle: PropTypes.func
 };
@@ -94,6 +91,7 @@ Editor.defaultProps = {
   showStatus: true,
   onIdle: null,
   buffer: null,
+  language: "jsx",
   height: null,
   files: []
 };
