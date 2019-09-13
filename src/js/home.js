@@ -121,6 +121,12 @@ export class Home extends React.Component{
                 loadFile(this.state.currentSlug, this.state.currentFileName)
                     .then(content => this.setState({ currentFileContent: content, codeHasBeenChanged: false }));
             });
+            compilerSocket.on("ask", ({ inputs }) => {
+                compilerSocket.emit('input', {
+                    inputs: inputs.map((question,i) => prompt(question || `Please enter the ${i+1} input`)),
+                    exerciseSlug: this.state.currentSlug
+                });
+            });
             this.setState({ compilerSocket });
         }
     }
