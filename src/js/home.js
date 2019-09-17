@@ -24,39 +24,75 @@ export default class Home extends React.Component{
         super();
         this.state = {
             host: getHost(),
-            helpSteps: [
-                {
-                    target: '.bc-readme',
-                    content: <span><h4>1) Read!</h4>Every exercise will come with a brief introduction and some instructions on how to complete it.</span>,
-                    placement: 'right',
-                    disableBeacon: true
-                },
-                {
-                    target: '.react-monaco-editor-container',
-                    content: <span><h4>2) Code!</h4>Use this coding editor on the right of the screen to code and propose a solution.</span>,
-                    placement: 'left'
-                },
-                {
-                    target: '.bc-terminal .button-bar',
-                    content: <span><h4>3) Compile!</h4>Use the terminal buttons to <code>build</code> and <code>test</code> your exercises solutions.</span>,
-                    placement: 'left'
-                },
-                {
-                    target: '.bc-terminal .status',
-                    content: <span>The console will always display the current state of the code, compilation errors or test results.</span>,
-                    placement: 'bottom'
-                },
-                {
-                    target: '.next-exercise',
-                    content: 'Once you are satisfied with your code solution, you can go ahead to the next exercise.',
-                    placement: 'bottom'
-                },
-                {
-                    target: 'body',
-                    content: <span><h4>4) Deliver!</h4>After finishing all exercises run <code>$ bc deliver:exercises</code> on your command line to deliver the exercises into the breathecode platform.</span>,
-                    placement: 'center'
-                }
-            ],
+            helpSteps: {
+                standalone: [
+                    {
+                        target: '.bc-readme',
+                        content: <span><h4>1) Read!</h4>Every exercise will come with a brief introduction and some instructions on how to complete it.</span>,
+                        placement: 'right',
+                        disableBeacon: true
+                    },
+                    {
+                        target: '.react-monaco-editor-container',
+                        content: <span><h4>2) Code!</h4>Use this coding editor on the right of the screen to code and propose a solution.</span>,
+                        placement: 'left'
+                    },
+                    {
+                        target: '.bc-terminal .button-bar',
+                        content: <span><h4>3) Compile!</h4>Use the terminal buttons to <code>build</code> and <code>test</code> your exercises solutions.</span>,
+                        placement: 'left'
+                    },
+                    {
+                        target: '.bc-terminal .status',
+                        content: <span>The console will always display the current state of the code, compilation errors or test results.</span>,
+                        placement: 'bottom'
+                    },
+                    {
+                        target: '.next-exercise',
+                        content: 'Once you are satisfied with your code solution, you can go ahead to the next exercise.',
+                        placement: 'bottom'
+                    },
+                    {
+                        target: 'body',
+                        content: <span><h4>4) Deliver!</h4>After finishing all exercises run <code>$ bc deliver:exercises</code> on your command line to deliver the exercises into the breathecode platform.</span>,
+                        placement: 'center'
+                    }
+                ],
+                gitpod: [
+                    {
+                        target: 'body',
+                        content: <span><h4>1) Read!</h4>Every exercise will come with a brief introduction and some instructions on how to complete it.</span>,
+                        placement: 'center',
+                        disableBeacon: true
+                    },
+                    {
+                        target: 'body',
+                        placement: 'center',
+                        content: <span><h4>2) Code!</h4>Use the gitpod ide on the left of the screen to code and propose a solution.</span>,
+                        disableBeacon: true
+                    },
+                    {
+                        target: '.button-bar',
+                        content: <span><h4>3) Compile!</h4>Use the terminal buttons to <code>build</code> and <code>test</code> your exercises solutions.</span>,
+                        placement: 'bottom'
+                    },
+                    {
+                        target: '.status',
+                        content: <span>The console will always display the current state of the code, compilation errors or test results.</span>,
+                        placement: 'bottom'
+                    },
+                    {
+                        target: '.next-exercise',
+                        content: 'Once you are satisfied with your code solution, you can go ahead to the next exercise.',
+                        placement: 'bottom'
+                    },
+                    {
+                        target: 'body',
+                        content: <span><h4>4) Deliver!</h4>After finishing all exercises run <code>$ bc deliver:exercises</code> on your command line to deliver the exercises into the breathecode platform.</span>,
+                        placement: 'center'
+                    }
+                ]
+            },
             editorSocket: null,
             editorSize: 450,
             editorMode: null,
@@ -180,25 +216,26 @@ export default class Home extends React.Component{
             }
         };
 
-        const LeftSide = (p) => (<div className={p.className}>
-            <Joyride
-                steps={this.state.helpSteps}
-                continuous={true}
-                run={showHelp === true && this.state.getIndex(this.state.currentSlug) === 1}
-                locale={{ back: 'Previous', close: 'Close', last: 'Finish', next: 'Next' }}
-                styles={{
-                    options: {
-                        backgroundColor: '#FFFFFF',
-                        overlayColor: 'rgba(0, 0, 0, 0.9)'
-                    }
-                }}
-                callback = {(tour) => {
-                    const { type } = tour;
-                    if (type === 'tour:end') {
-                        Session.setPayload({ showHelp: false });
-                    }
-                }}
-            />
+        const LeftSide = (p) => (<div className={p.className} style={{ paddingBottom: this.state.editorMode === "gitpod" ? "55px" : "0"}}>
+            { this.state.helpSteps[this.state.editorMode] && <Joyride
+                    steps={this.state.helpSteps[this.state.editorMode]}
+                    continuous={true}
+                    run={showHelp === true && this.state.getIndex(this.state.currentSlug) === 1}
+                    locale={{ back: 'Previous', close: 'Close', last: 'Finish', next: 'Next' }}
+                    styles={{
+                        options: {
+                            backgroundColor: '#FFFFFF',
+                            overlayColor: 'rgba(0, 0, 0, 0.9)'
+                        }
+                    }}
+                    callback = {(tour) => {
+                        const { type } = tour;
+                        if (type === 'tour:end') {
+                            Session.setPayload({ showHelp: false });
+                        }
+                    }}
+                />
+            }
             <div className={"credits "+p.creditsPosition}>
                 <img className={"bclogo"} src={logo} />
                 <span>Made with love <br/> by <a href="https://breatheco.de" target="_blank" rel="noopener noreferrer">BreatheCode</a></span>
@@ -210,7 +247,7 @@ export default class Home extends React.Component{
             <MarkdownParser className="markdown" source={this.state.currentInstructions ? this.state.currentInstructions : this.state.readme} />
         </div>);
 
-        if(this.state.files.length == 0) return <LeftSide className="ml-5 mr-5" creditsPosition="bottom-center" />;
+        if(this.state.files.length == 0) return <LeftSide creditsPosition="bottom-center" />;
 
         return this.state.editorMode === "standalone" ?
             <SplitPane split="vertical" minSize={size.vertical.min} defaultSize={size.vertical.init}>

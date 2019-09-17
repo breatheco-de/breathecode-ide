@@ -6,7 +6,7 @@ const Bar = ({ actions, disabled, onAction, status }) =>
     <div className={`status-bar ${status.code}`}>
         <div className="button-bar d-inline-block">
             {actions.map(a =>
-                <button type="button" typ key={a.slug}
+                <button type="button" key={a.slug}
                     disabled={disabled}
                     data-toggle="tooltip" data-placement="top" title={a.label}
                     className="btn"
