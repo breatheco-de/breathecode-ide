@@ -35,7 +35,7 @@ export const getStatus = function(status='initializing'){
 
 export const isPending = (status) => (status) ? (['initializing', 'compiling', 'testing', 'pending', 'conecting' ].indexOf(status.code || status) > 0) : true;
 
-const actions = ['build','prettify', 'test', 'run', 'input'];
+const actions = ['build','prettify', 'test', 'run', 'input', 'gitpod-open'];
 
 export default {
     socket: null,

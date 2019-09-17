@@ -163,7 +163,7 @@ export default class Home extends React.Component{
                 this.setState(state);
             });
             compilerSocket.onStatus('compiler-success', () => {
-                loadFile(this.state.currentSlug, this.state.currentFileName)
+                if(this.state.editorMode === "standalone") loadFile(this.state.currentSlug, this.state.currentFileName)
                     .then(content => this.setState({ currentFileContent: content, codeHasBeenChanged: false }));
             });
             compilerSocket.on("ask", ({ inputs }) => {
@@ -190,14 +190,19 @@ export default class Home extends React.Component{
                         codeHasBeenChanged: true,
                         consoleStatus: { code: 'ready', message: getStatus('ready') }
                     });
-                    if(files.length > 0) loadFile(slug, files[0].name).then(content => this.setState({
-                        currentFileContent: content,
-                        currentFileName: files[0].name,
-                        possibleActions: this.state.possibleActions.filter(a => a.slug !== 'preview'),
-                        currentFileExtension: files[0].name.split('.').pop()
-                    }));
+                    if(files.length > 0){
+                        console.log(this.state.editorMode);
+                        if(this.state.editorMode === 'standalone') loadFile(slug, files[0].name).then(content => this.setState({
+                            currentFileContent: content,
+                            currentFileName: files[0].name,
+                            possibleActions: this.state.possibleActions.filter(a => a.slug !== 'preview'),
+                            currentFileExtension: files[0].name.split('.').pop()
+                        }));
+
+                        if(this.state.editorMode === 'gitpod') this.state.compilerSocket.emit("gitpod-open", { exerciseSlug: this.state.currentSlug, files: files.map(f => f.path) });
+                    }
                 })
-                .catch(error => this.setState({ error: "There was an error loading the exercise: "+slug }));
+                .catch(error => console.log(error) || this.setState({ error: "There was an error loading the exercise: "+slug }));
             loadFile(slug,'README.md').then(readme => this.setState({ readme }));
         }
     }
