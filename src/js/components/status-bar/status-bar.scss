@@ -1,0 +1,31 @@
+.status-bar{
+    background: #272727;
+    padding: 5px;
+    color: white;
+    .status{
+        font-size: 17px;
+        padding-left: 10px;
+    }
+    &.ready{
+        .status{
+            animation: glow 1s ease-in-out infinite alternate;
+        }
+    }
+    &.compiler-error, &.testing-error{
+        background: #6e0b0b;
+    }
+    &.compiler-warning{ background: orange; }
+    &.compiler-success, &.testing-success{ background: #003d1c; }
+    .button-bar{
+        margin: 0;
+        background: rgba(255, 255, 255, 0.1);
+        .btn{ color: white; }
+        i{ margin-right: 5px; }
+    }
+}
+
+@-webkit-keyframes glow {
+  from {
+    text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #e60073, 0 0 40px #e60073, 0 0 50px #e60073, 0 0 60px #e60073, 0 0 70px #e60073;
+  }
+}

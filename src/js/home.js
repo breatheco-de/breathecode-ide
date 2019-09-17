@@ -2,6 +2,7 @@ import React from 'react';
 import logo from '../img/breathecode.png';
 import Editor from './components/editor/Editor.js';
 import Terminal from './components/terminal/Terminal.js';
+import StatusBar from './components/status-bar/StatusBar.js';
 import SplitPane from 'react-split-pane';
 import { MarkdownParser } from "@breathecode/ui-components";
 import Socket, { isPending, getStatus } from './socket';
@@ -18,7 +19,7 @@ const actions = [
 ];
 
 //create your first component
-export class Home extends React.Component{
+export default class Home extends React.Component{
     constructor(){
         super();
         this.state = {
@@ -58,6 +59,7 @@ export class Home extends React.Component{
             ],
             editorSocket: null,
             editorSize: 450,
+            editorMode: null,
             codeHasBeenChanged: true,
             exercises: [],
             error: null,
@@ -91,9 +93,16 @@ export class Home extends React.Component{
             }
         };
     }
+    setEditorConfig(){
+        fetch(this.state.host+'/config').then(resp => resp.json()).then(config => {
+            this.setState({
+                editorMode: config.editor
+            });
+        });
+    }
     componentDidMount(){
         if(this.state.host){
-
+            this.setEditorConfig();
             const session = Session.getSession();
             if(!session.active) Session.start({ payload: { showHelp: true } });
             else if(typeof session.payload.showHelp === 'undefined') Session.setPayload({ showHelp:true });
@@ -203,7 +212,7 @@ export class Home extends React.Component{
 
         if(this.state.files.length == 0) return <LeftSide className="ml-5 mr-5" creditsPosition="bottom-center" />;
 
-        return (
+        return this.state.editorMode === "standalone" ?
             <SplitPane split="vertical" minSize={size.vertical.min} defaultSize={size.vertical.init}>
                 <LeftSide creditsPosition="top-right" />
                 <div>
@@ -233,6 +242,7 @@ export class Home extends React.Component{
                             })}
                         />
                         <Terminal
+                            mode={this.state.editorMode}
                             disabled={isPending(this.state.consoleStatus) || this.state.isSaving}
                             host={this.state.host}
                             status={this.state.isSaving ? { code: 'saving', message: getStatus('saving') } : this.state.consoleStatus}
@@ -248,7 +258,19 @@ export class Home extends React.Component{
                     </SplitPane>
                 </div>
             </SplitPane>
-        );
+            :
+            <div>
+                <StatusBar
+                    actions={this.state.possibleActions}
+                    status={this.state.consoleStatus}
+                    disabled={isPending(this.state.consoleStatus)}
+                    onAction={(a) => {
+                        if(a.slug === 'preview') window.open(this.state.host+'/preview');
+                        else this.state.compilerSocket.emit(a.slug, { exerciseSlug: this.state.currentSlug });
+                    }}
+                />
+                <LeftSide creditsPosition="bottom-center" />
+            </div>;
     }
 }
 
