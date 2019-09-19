@@ -308,7 +308,7 @@ export default class Home extends React.Component{
                     disabled={isPending(this.state.consoleStatus)}
                     onAction={(a) => {
                         if(a.slug === 'preview') window.open(this.state.host+'/preview');
-                        else this.state.compilerSocket.emit(a.slug, { exerciseSlug: this.state.currentSlug });
+                        this.state.compilerSocket.emit(a.slug, { exerciseSlug: this.state.currentSlug });
                     }}
                 />
                 <LeftSide creditsPosition="bottom-center" />
