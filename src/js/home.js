@@ -221,7 +221,7 @@ export default class Home extends React.Component{
             }
         };
 
-        const LeftSide = (p) => (<div className={p.className} style={{ paddingBottom: this.state.editorMode === "gitpod" ? "55px" : "0"}}>
+        const LeftSide = (p) => (<div className={p.className + ` editor-${this.state.editorMode}`} style={{ paddingBottom: this.state.editorMode === "gitpod" ? "0" : "0"}}>
             { this.state.helpSteps[this.state.editorMode] && <Joyride
                     steps={this.state.helpSteps[this.state.editorMode]}
                     continuous={true}
@@ -241,18 +241,12 @@ export default class Home extends React.Component{
                     }}
                 />
             }
-            <div className={"credits "+p.creditsPosition}>
-                <img className={"bclogo"} src={logo} />
-                <span>Made with love <br/> by <a href="https://breatheco.de" target="_blank" rel="noopener noreferrer">BreatheCode</a></span>
-            </div>
-            <div className="prev-next-bar">
-                {(this.state.previous()) ? <a className="prev-exercise" href={"#"+this.state.previous().slug}>Previous</a>:''}
-                {(this.state.next()) ? <a className="next-exercise" href={"#"+this.state.next().slug}>Next</a>:''}
+            <div className={`prev-next-bar`}>
+                {(this.state.previous()) ? <a className="prev-exercise btn btn-dark" href={"#"+this.state.previous().slug}><i className="fas fa-arrow-left"></i> Previous exercise</a>:''}
+                {(this.state.next()) ? <a className="next-exercise btn btn-dark" href={"#"+this.state.next().slug}>Next exercise <i className="fas fa-arrow-right"></i></a>:''}
             </div>
             <MarkdownParser className="markdown" source={this.state.currentInstructions ? this.state.currentInstructions : this.state.readme} />
         </div>);
-
-        if(this.state.files.length == 0) return <LeftSide creditsPosition="bottom-center" />;
 
         return this.state.editorMode === "standalone" ?
             <SplitPane split="vertical" minSize={size.vertical.min} defaultSize={size.vertical.init}>
@@ -263,26 +257,30 @@ export default class Home extends React.Component{
                         defaultSize={size.horizontal.init}
                         onChange={ size => this.setState({editorSize: size}) }
                     >
-                        <Editor
-                            files={this.state.files}
-                            language={this.state.currentFileExtension}
-                            buffer={this.state.currentFileContent}
-                            onOpen={(fileName) => loadFile(this.state.currentSlug,fileName).then(content => this.setState({ currentFileContent: content, currentFileName: fileName.name, currentFileExtension: fileName.name.split('.').pop() })) }
-                            showStatus={true}
-                            onIdle={() => {
-                                saveFile(this.state.currentSlug, this.state.currentFileName, this.state.currentFileContent)
-                                            .then(status => this.setState({ isSaving: false, consoleLogs: ['Your code has been saved successfully.', 'Ready to compile...'] }))
-                                            .catch(error => this.setState({ isSaving: false, consoleLogs: ['There was an error saving your code.'] }));
-                            }}
-                            height={this.state.editorSize}
-                            onChange={(content) => this.setState({
-                                currentFileContent: content,
-                                codeHasBeenChanged: true,
-                                isSaving: true,
-                                consoleLogs: [],
-                                consoleStatus: { code: 'ready', message: getStatus('ready') }
-                            })}
-                        />
+                        { this.state.files.length > 0 ?
+                            <Editor
+                                files={this.state.files}
+                                language={this.state.currentFileExtension}
+                                buffer={this.state.currentFileContent}
+                                onOpen={(fileName) => loadFile(this.state.currentSlug,fileName).then(content => this.setState({ currentFileContent: content, currentFileName: fileName.name, currentFileExtension: fileName.name.split('.').pop() })) }
+                                showStatus={true}
+                                onIdle={() => {
+                                    saveFile(this.state.currentSlug, this.state.currentFileName, this.state.currentFileContent)
+                                                .then(status => this.setState({ isSaving: false, consoleLogs: ['Your code has been saved successfully.', 'Ready to compile or test...'] }))
+                                                .catch(error => this.setState({ isSaving: false, consoleLogs: ['There was an error saving your code.'] }));
+                                }}
+                                height={this.state.editorSize}
+                                onChange={(content) => this.setState({
+                                    currentFileContent: content,
+                                    codeHasBeenChanged: true,
+                                    isSaving: true,
+                                    consoleLogs: [],
+                                    consoleStatus: { code: 'ready', message: getStatus('ready') }
+                                })}
+                            />
+                            :
+                            <div className="empty-editor" style={{ height: this.state.editorSize, lineHeight: this.state.editorSize+"px" }}>Please click on `Next exercise` after finishing reading this message.</div>
+                        }
                         <Terminal
                             mode={this.state.editorMode}
                             disabled={isPending(this.state.consoleStatus) || this.state.isSaving}

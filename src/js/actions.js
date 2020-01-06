@@ -15,7 +15,9 @@ const actions = {
                     if(resp.ok) return resp.json();
                     else throw new Error('There seems to be an error connecting with the server');
                 })
-                .then(exercises => {
+                .then(details => {
+                    const exercises = Array.isArray(details) ? details : details.exercises;
+
                     if(Array.isArray(exercises) && exercises.length >0 ) resolve(exercises);
                     else throw new Error('No exercises where found on the currect directory');
                 })

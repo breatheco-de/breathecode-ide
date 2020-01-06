@@ -1,7 +1,14 @@
 .status-bar{
-    background: #272727;
+    background: #1C1C1C;
     padding: 5px;
     color: white;
+    &.fixed{
+        position: fixed;
+        top: 40px;
+        bottom: 0;
+        width: 100%;
+        height: fit-content;
+    }
     .status{
         font-size: 17px;
         padding-left: 10px;
