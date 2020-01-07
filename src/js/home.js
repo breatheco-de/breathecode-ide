@@ -6,7 +6,7 @@ import StatusBar from './components/status-bar/StatusBar.js';
 import SplitPane from 'react-split-pane';
 import { MarkdownParser } from "@breathecode/ui-components";
 import Socket, { isPending, getStatus } from './socket';
-import { getHost, loadExercises, loadSingleExercise, loadFile, saveFile } from './actions.js';
+import { getHost, loadExercises, loadSingleExercise, loadFile, saveFile, loadReadme } from './actions.js';
 import Joyride from 'react-joyride';
 import { Session } from 'bc-react-session';
 
@@ -111,6 +111,7 @@ export default class Home extends React.Component{
             currentFileExtension: null,
             possibleActions: [],
             readme: '',
+            videoTutorial: null,
             getIndex: (slug) => {
                 for(let i=0; i<this.state.exercises.length; i++)
                     if(this.state.exercises[i].slug == slug) return i;
@@ -203,7 +204,10 @@ export default class Home extends React.Component{
                     }
                 })
                 .catch(error => console.log(error) || this.setState({ error: "There was an error loading the exercise: "+slug }));
-            loadFile(slug,'README.md').then(readme => this.setState({ readme }));
+            loadReadme(slug).then(readme => {
+                const videoTutorial = !readme.attributes ? null : readme.attributes.tutorial || null;
+                this.setState({ readme: readme.body || readme, videoTutorial });
+            });
         }
     }
     render(){
@@ -218,6 +222,14 @@ export default class Home extends React.Component{
             horizontal: {
                 min: 50,
                 init: 450
+            }
+        };
+
+        const nextButtonColors = (status) => {
+            if(!status) return 'btn-dark';
+            switch(status.code){
+                case "testing-success": return 'btn-success';
+                default: return 'btn-dark';
             }
         };
 
@@ -242,22 +254,27 @@ export default class Home extends React.Component{
                 />
             }
             <div className={`prev-next-bar`}>
-                {(this.state.previous()) ? <a className="prev-exercise btn btn-dark" href={"#"+this.state.previous().slug}><i className="fas fa-arrow-left"></i> Previous exercise</a>:''}
-                {(this.state.next()) ? <a className="next-exercise btn btn-dark" href={"#"+this.state.next().slug}>Next exercise <i className="fas fa-arrow-right"></i></a>:''}
+                {(this.state.previous()) ? <button className="prev-exercise btn btn-dark" disabled={isPending(this.state.consoleStatus)} onClick={() => {
+                        if(!isPending(this.state.consoleStatus)) window.location.hash = "#"+this.state.previous().slug;
+                    }}><i className="fas fa-arrow-left"></i> Previous exercise</button>:''}
+                {this.state.videoTutorial && <button className="btn text-white"><i className="fab fa-youtube"></i> Video Solution</button>}
+                {(this.state.next()) ? <button className={`next-exercise btn ${ nextButtonColors(this.state.consoleStatus)}`} disabled={isPending(this.state.consoleStatus)} onClick={() => {
+                        if(!isPending(this.state.consoleStatus)) window.location.hash = "#"+this.state.next().slug;
+                    }}>Next exercise <i className="fas fa-arrow-right"></i></button>:''}
             </div>
             <MarkdownParser className="markdown" source={this.state.currentInstructions ? this.state.currentInstructions : this.state.readme} />
         </div>);
 
         return this.state.editorMode === "standalone" ?
-            <SplitPane split="vertical" minSize={size.vertical.min} defaultSize={size.vertical.init}>
+            <SplitPane split="vertical" style={{ backgroundColor: "#333333"}} minSize={size.vertical.min} defaultSize={size.vertical.init}>
                 <LeftSide creditsPosition="top-right" />
                 <div>
-                    <SplitPane split="horizontal"
-                        minSize={size.horizontal.min}
-                        defaultSize={size.horizontal.init}
-                        onChange={ size => this.setState({editorSize: size}) }
-                    >
-                        { this.state.files.length > 0 ?
+                    { this.state.files.length > 0 &&
+                        <SplitPane split="horizontal"
+                            minSize={size.horizontal.min}
+                            defaultSize={size.horizontal.init}
+                            onChange={ size => this.setState({editorSize: size}) }
+                        >
                             <Editor
                                 files={this.state.files}
                                 language={this.state.currentFileExtension}
@@ -278,24 +295,22 @@ export default class Home extends React.Component{
                                     consoleStatus: { code: 'ready', message: getStatus('ready') }
                                 })}
                             />
-                            :
-                            <div className="empty-editor" style={{ height: this.state.editorSize, lineHeight: this.state.editorSize+"px" }}>Please click on `Next exercise` after finishing reading this message.</div>
-                        }
-                        <Terminal
-                            mode={this.state.editorMode}
-                            disabled={isPending(this.state.consoleStatus) || this.state.isSaving}
-                            host={this.state.host}
-                            status={this.state.isSaving ? { code: 'saving', message: getStatus('saving') } : this.state.consoleStatus}
-                            logs={this.state.consoleLogs}
-                            actions={this.state.possibleActions}
-                            onAction={(a) => {
-                                if(a.slug === 'preview') window.open(this.state.host+'/preview');
-                                else this.state.compilerSocket.emit(a.slug, { exerciseSlug: this.state.currentSlug });
-                            }}
-                            height={window.innerHeight - this.state.editorSize}
-                            exercise={this.state.currentSlug}
-                        />
-                    </SplitPane>
+                            <Terminal
+                                mode={this.state.editorMode}
+                                disabled={isPending(this.state.consoleStatus) || this.state.isSaving}
+                                host={this.state.host}
+                                status={this.state.isSaving ? { code: 'saving', message: getStatus('saving') } : this.state.consoleStatus}
+                                logs={this.state.consoleLogs}
+                                actions={this.state.possibleActions}
+                                onAction={(a) => {
+                                    if(a.slug === 'preview') window.open(this.state.host+'/preview');
+                                    else this.state.compilerSocket.emit(a.slug, { exerciseSlug: this.state.currentSlug });
+                                }}
+                                height={window.innerHeight - this.state.editorSize}
+                                exercise={this.state.currentSlug}
+                                />
+                        </SplitPane>
+                    }
                 </div>
             </SplitPane>
             :

@@ -14,7 +14,7 @@ body{
 }
 .bc-readme{
     height: calc(100vh - 40px);
-    margin-top: 40px;
+    background: white;
     overflow-y: auto;
     font-size: 16px;
     h1{ font-size: 28px; }
@@ -29,7 +29,9 @@ body{
 }
 .prev-next-bar{
     overflow: hidden;
-    background: #4a4a4a;
+    text-align: center;
+    color: white;
+    background: #333333;
     padding: 5px;
     .prev-exercise{
         float: left;

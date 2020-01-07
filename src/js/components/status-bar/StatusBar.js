@@ -13,7 +13,7 @@ const Bar = ({ actions, disabled, onAction, status }) =>
                     onClick={() => onAction && onAction(a)}
                 >
                     <i className={a.icon}></i>
-                    <small>{a.label}</small>
+                    <small className="hint">{a.label}</small>
                 </button>
             )}
         </div>

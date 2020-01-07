@@ -53,6 +53,19 @@ const actions = {
             .catch(error => reject(error))
         );
     },
+    loadReadme: function(exerciseSlug){
+        return new Promise((resolve, reject) =>
+            fetch(HOST+'/exercise/'+exerciseSlug+'/readme').then(resp => {
+                if(resp.status == 200){
+                    const originalText = resp.text();
+                    resp.json().then(data => resolve(data))
+                        .catch(() => resolve(originalText));
+                }
+                else reject();
+            })
+            .catch(error => reject(error))
+        );
+    },
     saveFile: function(exerciseSlug, file, content){
         return new Promise((resolve, reject) =>
             fetch(HOST+'/exercise/'+exerciseSlug+'/file/'+(file.name || file),{
@@ -65,4 +78,4 @@ const actions = {
     }
 };
 
-export const {getHost, loadExercises, loadSingleExercise, loadFile, saveFile } = actions;
+export const {getHost, loadExercises, loadSingleExercise, loadFile, saveFile, loadReadme } = actions;
