@@ -206,7 +206,8 @@ export default class Home extends React.Component{
                 .catch(error => console.log(error) || this.setState({ error: "There was an error loading the exercise: "+slug }));
             loadReadme(slug).then(readme => {
                 const videoTutorial = !readme.attributes ? null : readme.attributes.tutorial || null;
-                this.setState({ readme: readme.body || readme, videoTutorial });
+                const _readme = readme.body || readme;
+                this.setState({ readme: _readme, videoTutorial });
             });
         }
     }

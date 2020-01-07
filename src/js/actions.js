@@ -57,9 +57,15 @@ const actions = {
         return new Promise((resolve, reject) =>
             fetch(HOST+'/exercise/'+exerciseSlug+'/readme').then(resp => {
                 if(resp.status == 200){
-                    const originalText = resp.text();
-                    resp.json().then(data => resolve(data))
-                        .catch(() => resolve(originalText));
+                    resp.text().then(originalText => {
+                        try {
+                            const data = JSON.parse(originalText);
+                            resolve(data);
+                        } catch (e) {
+                            console.log("Error", originalText);
+                            resolve(originalText);
+                        }
+                    });
                 }
                 else reject();
             })
