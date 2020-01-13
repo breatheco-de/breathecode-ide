@@ -19,7 +19,7 @@ export const getStatus = function(status='initializing'){
         case "conecting": return "📳 Conecting...";
         case "saving": return "💾 Saving Files...";
 
-        case "ready": return "🐶 Ready to compile or test";
+        case "ready": return "🐶 Ready...";
         case "compiler-error": return `${bad()} Your code has errors`;
         case "compiler-warning": return "⚠️ Your code compiled, but with some warnings";
         case "compiler-success": return `Successfully built. ${good()}`;

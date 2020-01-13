@@ -29,12 +29,11 @@ body{
 }
 .prev-next-bar{
     overflow: hidden;
-    text-align: center;
     color: white;
     background: #333333;
     padding: 5px;
     .prev-exercise{
-        float: left;
+        float: right;
     }
     .next-exercise{
         float: right;

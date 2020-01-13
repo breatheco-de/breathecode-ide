@@ -3,6 +3,7 @@ import logo from '../img/breathecode.png';
 import Editor from './components/editor/Editor.js';
 import Terminal from './components/terminal/Terminal.js';
 import StatusBar from './components/status-bar/StatusBar.js';
+import Menu from './components/menu/Menu.js';
 import SplitPane from 'react-split-pane';
 import { MarkdownParser } from "@breathecode/ui-components";
 import Socket, { isPending, getStatus } from './socket';
@@ -94,6 +95,7 @@ export default class Home extends React.Component{
                 ]
             },
             editorSocket: null,
+            menuOpened: false,
             editorSize: 450,
             editorMode: null,
             codeHasBeenChanged: true,
@@ -147,7 +149,11 @@ export default class Home extends React.Component{
             loadExercises()
                 .then((exercises) => {
                     this.setState({ exercises, error: null });
-                    if(!window.location.hash || window.location.hash == '#') this.loadInstructions(exercises[0].slug);
+                    if(!window.location.hash || window.location.hash == '#'){
+                        const _savedSlug = localStorage.getItem('exercise-slug');
+                        if(_savedSlug && typeof _savedSlug == "string" && _savedSlug != "") this.loadInstructions(_savedSlug);
+                        else this.loadInstructions(exercises[0].slug);
+                    } 
                 })
                 .catch(error => this.setState({ error: "There was an error loading the excercise list from "+this.state.host }));
 
@@ -176,6 +182,7 @@ export default class Home extends React.Component{
             this.setState({ compilerSocket });
         }
     }
+
     loadInstructions(slug=null){
         if(!slug) slug = window.location.hash.slice(1,window.location.hash.length);
         if(slug=='' || slug=='/'){
@@ -184,12 +191,14 @@ export default class Home extends React.Component{
         else{
             loadSingleExercise(slug)
                 .then(files => {
+                    localStorage.setItem('exercise-slug', slug);
                     this.setState({
                         files,
                         currentSlug: slug,
                         consoleLogs: [],
                         codeHasBeenChanged: true,
-                        consoleStatus: { code: 'ready', message: getStatus('ready') }
+                        consoleStatus: { code: 'ready', message: getStatus('ready') },
+                        menuOpened: false
                     });
                     if(files.length > 0){
                         console.log(this.state.editorMode);
@@ -255,14 +264,21 @@ export default class Home extends React.Component{
                 />
             }
             <div className={`prev-next-bar`}>
-                {(this.state.previous()) ? <button className="prev-exercise btn btn-dark" disabled={isPending(this.state.consoleStatus)} onClick={() => {
-                        if(!isPending(this.state.consoleStatus)) window.location.hash = "#"+this.state.previous().slug;
-                    }}><i className="fas fa-arrow-left"></i> Previous exercise</button>:''}
-                {this.state.videoTutorial && <button className="btn text-white"><i className="fab fa-youtube"></i> Video Solution</button>}
-                {(this.state.next()) ? <button className={`next-exercise btn ${ nextButtonColors(this.state.consoleStatus)}`} disabled={isPending(this.state.consoleStatus)} onClick={() => {
-                        if(!isPending(this.state.consoleStatus)) window.location.hash = "#"+this.state.next().slug;
+                {<button onClick={e => this.setState({ menuOpened: !this.state.menuOpened })} className="btn text-white"><i className="fas fa-bars"></i></button>}
+                {(this.state.next()) ? <button className={`ml-2 next-exercise btn ${ nextButtonColors(this.state.consoleStatus)}`} disabled={isPending(this.state.consoleStatus)} onClick={() => {
+                        if(!isPending(this.state.consoleStatus)){
+                            window.location.hash = "#"+this.state.next().slug;
+                        } 
                     }}>Next exercise <i className="fas fa-arrow-right"></i></button>:''}
+                {(this.state.previous()) ? <button className="prev-exercise btn btn-dark" disabled={isPending(this.state.consoleStatus)} onClick={() => {
+                        if(!isPending(this.state.consoleStatus)){
+                            window.location.hash = "#"+this.state.previous().slug;
+                        } 
+                    }}><i className="fas fa-arrow-left"></i> Previous exercise</button>:''}
             </div>
+            <Menu className={`${this.state.menuOpened ? "open":""}`} exercises={this.state.exercises} onClick={slug => {
+                this.loadInstructions(slug);
+            }} />
             <MarkdownParser className="markdown" source={this.state.currentInstructions ? this.state.currentInstructions : this.state.readme} />
         </div>);
 

@@ -1,0 +1,19 @@
+.left-menu{
+    color: #ffffff;
+    height: 0px;
+    display: none;
+    overflow-y: auto;
+    transition: height 2s;
+    &.open{ height: 80vh; display: block; }
+    ul{
+        margin: 0;
+        li{
+            padding: 4px 5px 4px 18px;
+            margin: 0;
+            &:hover{
+                cursor: pointer;
+                background: rgba($color: #ffffff, $alpha: 0.2)
+            }
+        }
+    }
+}
