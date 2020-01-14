@@ -1,14 +1,20 @@
+.editor-gitpod{
+    .left-menu{
+        &.open{ margin-top: 40px; }
+    }
+}
 .left-menu{
     color: #ffffff;
-    height: 0px;
-    display: none;
+    background: #333333;
+    height: 0vh;
+    max-height: 0vh;
     overflow-y: auto;
-    transition: height 2s;
-    &.open{ height: 80vh; display: block; }
+    transition: max-height 1s ease, height 1s ease;
+    &.open{ height: auto; max-height: 80vh; padding: 0px 12px 10px 12px; }
     ul{
         margin: 0;
         li{
-            padding: 4px 5px 4px 18px;
+            padding: 4px;
             margin: 0;
             &:hover{
                 cursor: pointer;

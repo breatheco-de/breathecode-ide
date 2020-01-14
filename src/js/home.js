@@ -3,7 +3,7 @@ import logo from '../img/breathecode.png';
 import Editor from './components/editor/Editor.js';
 import Terminal from './components/terminal/Terminal.js';
 import StatusBar from './components/status-bar/StatusBar.js';
-import Menu from './components/menu/Menu.js';
+import Sidebar from './components/sidebar/sidebar.js';
 import SplitPane from 'react-split-pane';
 import { MarkdownParser } from "@breathecode/ui-components";
 import Socket, { isPending, getStatus } from './socket';
@@ -238,12 +238,12 @@ export default class Home extends React.Component{
         const nextButtonColors = (status) => {
             if(!status) return 'btn-dark';
             switch(status.code){
-                case "testing-success": return 'btn-success';
+                case "testing-success": return 'btn-success glow';
                 default: return 'btn-dark';
             }
         };
 
-        const LeftSide = (p) => (<div className={p.className + ` editor-${this.state.editorMode}`} style={{ paddingBottom: this.state.editorMode === "gitpod" ? "0" : "0"}}>
+        return <div>
             { this.state.helpSteps[this.state.editorMode] && <Joyride
                     steps={this.state.helpSteps[this.state.editorMode]}
                     continuous={true}
@@ -263,86 +263,92 @@ export default class Home extends React.Component{
                     }}
                 />
             }
-            <div className={`prev-next-bar`}>
-                {<button onClick={e => this.setState({ menuOpened: !this.state.menuOpened })} className="btn text-white"><i className="fas fa-bars"></i></button>}
-                {(this.state.next()) ? <button className={`ml-2 next-exercise btn ${ nextButtonColors(this.state.consoleStatus)}`} disabled={isPending(this.state.consoleStatus)} onClick={() => {
-                        if(!isPending(this.state.consoleStatus)){
-                            window.location.hash = "#"+this.state.next().slug;
-                        } 
-                    }}>Next exercise <i className="fas fa-arrow-right"></i></button>:''}
-                {(this.state.previous()) ? <button className="prev-exercise btn btn-dark" disabled={isPending(this.state.consoleStatus)} onClick={() => {
-                        if(!isPending(this.state.consoleStatus)){
-                            window.location.hash = "#"+this.state.previous().slug;
-                        } 
-                    }}><i className="fas fa-arrow-left"></i> Previous exercise</button>:''}
-            </div>
-            <Menu className={`${this.state.menuOpened ? "open":""}`} exercises={this.state.exercises} onClick={slug => {
-                this.loadInstructions(slug);
-            }} />
-            <MarkdownParser className="markdown" source={this.state.currentInstructions ? this.state.currentInstructions : this.state.readme} />
-        </div>);
-
-        return this.state.editorMode === "standalone" ?
-            <SplitPane split="vertical" style={{ backgroundColor: "#333333"}} minSize={size.vertical.min} defaultSize={size.vertical.init}>
-                <LeftSide creditsPosition="top-right" />
-                <div>
-                    { this.state.files.length > 0 &&
-                        <SplitPane split="horizontal"
-                            minSize={size.horizontal.min}
-                            defaultSize={size.horizontal.init}
-                            onChange={ size => this.setState({editorSize: size}) }
-                        >
-                            <Editor
-                                files={this.state.files}
-                                language={this.state.currentFileExtension}
-                                buffer={this.state.currentFileContent}
-                                onOpen={(fileName) => loadFile(this.state.currentSlug,fileName).then(content => this.setState({ currentFileContent: content, currentFileName: fileName.name, currentFileExtension: fileName.name.split('.').pop() })) }
-                                showStatus={true}
-                                onIdle={() => {
-                                    saveFile(this.state.currentSlug, this.state.currentFileName, this.state.currentFileContent)
-                                                .then(status => this.setState({ isSaving: false, consoleLogs: ['Your code has been saved successfully.', 'Ready to compile or test...'] }))
-                                                .catch(error => this.setState({ isSaving: false, consoleLogs: ['There was an error saving your code.'] }));
-                                }}
-                                height={this.state.editorSize}
-                                onChange={(content) => this.setState({
-                                    currentFileContent: content,
-                                    codeHasBeenChanged: true,
-                                    isSaving: true,
-                                    consoleLogs: [],
-                                    consoleStatus: { code: 'ready', message: getStatus('ready') }
-                                })}
-                            />
-                            <Terminal
-                                mode={this.state.editorMode}
-                                disabled={isPending(this.state.consoleStatus) || this.state.isSaving}
-                                host={this.state.host}
-                                status={this.state.isSaving ? { code: 'saving', message: getStatus('saving') } : this.state.consoleStatus}
-                                logs={this.state.consoleLogs}
-                                actions={this.state.possibleActions}
-                                onAction={(a) => {
-                                    if(a.slug === 'preview') window.open(this.state.host+'/preview');
-                                    else this.state.compilerSocket.emit(a.slug, { exerciseSlug: this.state.currentSlug });
-                                }}
-                                height={window.innerHeight - this.state.editorSize}
-                                exercise={this.state.currentSlug}
+            {this.state.editorMode === "standalone" ?
+                <SplitPane split="vertical" style={{ backgroundColor: "#333333"}} minSize={size.vertical.min} defaultSize={size.vertical.init}>
+                    <Sidebar 
+                        disabled={isPending(this.state.consoleStatus)}
+                        previous={this.state.previous()}
+                        next={this.state.next()}
+                        exercises={this.state.exercises}
+                        className={`editor-${this.state.editorMode}`}
+                        onClick={slug => window.location.hash = "#"+slug}
+                        onOpen={status => this.setState({ menuOpened: status })}
+                    >
+                        <MarkdownParser className="markdown" source={this.state.currentInstructions ? this.state.currentInstructions : this.state.readme} />
+                    </Sidebar>
+                    <div>
+                        { this.state.files.length > 0 &&
+                            <SplitPane split="horizontal"
+                                minSize={size.horizontal.min}
+                                defaultSize={size.horizontal.init}
+                                onChange={ size => this.setState({editorSize: size}) }
+                            >
+                                <Editor
+                                    files={this.state.files}
+                                    language={this.state.currentFileExtension}
+                                    buffer={this.state.currentFileContent}
+                                    onOpen={(fileName) => loadFile(this.state.currentSlug,fileName).then(content => this.setState({ currentFileContent: content, currentFileName: fileName.name, currentFileExtension: fileName.name.split('.').pop() })) }
+                                    showStatus={true}
+                                    onIdle={() => {
+                                        saveFile(this.state.currentSlug, this.state.currentFileName, this.state.currentFileContent)
+                                                    .then(status => this.setState({ isSaving: false, consoleLogs: ['Your code has been saved successfully.', 'Ready to compile or test...'] }))
+                                                    .catch(error => this.setState({ isSaving: false, consoleLogs: ['There was an error saving your code.'] }));
+                                    }}
+                                    height={this.state.editorSize}
+                                    onChange={(content) => this.setState({
+                                        currentFileContent: content,
+                                        codeHasBeenChanged: true,
+                                        isSaving: true,
+                                        consoleLogs: [],
+                                        consoleStatus: { code: 'ready', message: getStatus('ready') }
+                                    })}
                                 />
-                        </SplitPane>
+                                <Terminal
+                                    mode={this.state.editorMode}
+                                    disabled={isPending(this.state.consoleStatus) || this.state.isSaving}
+                                    host={this.state.host}
+                                    status={this.state.isSaving ? { code: 'saving', message: getStatus('saving') } : this.state.consoleStatus}
+                                    logs={this.state.consoleLogs}
+                                    actions={this.state.possibleActions}
+                                    onAction={(a) => {
+                                        if(a.slug === 'preview') window.open(this.state.host+'/preview');
+                                        else this.state.compilerSocket.emit(a.slug, { exerciseSlug: this.state.currentSlug });
+                                    }}
+                                    height={window.innerHeight - this.state.editorSize}
+                                    exercise={this.state.currentSlug}
+                                    />
+                            </SplitPane>
+                        }
+                    </div>
+                </SplitPane>
+                :
+                <div>
+                    { !this.state.menuOpened && this.state.files.length > 0 &&
+                        <StatusBar
+                            actions={this.state.possibleActions}
+                            status={this.state.consoleStatus}
+                            exercises={this.state.exercises}
+                            disabled={isPending(this.state.consoleStatus)}
+                            onAction={(a) => {
+                                if(a.slug === 'preview') window.open(this.state.host+'/preview');
+                                this.state.compilerSocket.emit(a.slug, { exerciseSlug: this.state.currentSlug });
+                            }}
+                        />
                     }
+                    <Sidebar 
+                        disabled={isPending(this.state.consoleStatus)}
+                        previous={this.state.previous()}
+                        next={this.state.next()}
+                        exercises={this.state.exercises}
+                        className={`editor-${this.state.editorMode}`}
+                        onClick={slug => window.location.hash = "#"+slug}
+                        onOpen={status => this.setState({ menuOpened: status })}
+                    >
+                        <MarkdownParser className="markdown" source={this.state.currentInstructions ? this.state.currentInstructions : this.state.readme} />
+                    </Sidebar>
                 </div>
-            </SplitPane>
-            :
-            <div>
-                <StatusBar
-                    actions={this.state.possibleActions}
-                    status={this.state.consoleStatus}
-                    disabled={isPending(this.state.consoleStatus)}
-                    onAction={(a) => {
-                        if(a.slug === 'preview') window.open(this.state.host+'/preview');
-                        this.state.compilerSocket.emit(a.slug, { exerciseSlug: this.state.currentSlug });
-                    }}
-                />
-                <LeftSide creditsPosition="bottom-center" />
-            </div>;
+            }
+        </div>;
     }
 }
 
