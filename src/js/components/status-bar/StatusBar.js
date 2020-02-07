@@ -9,7 +9,7 @@ const Bar = ({ actions, disabled, onAction, status }) =>
                 <button type="button" key={a.slug}
                     disabled={disabled}
                     data-toggle="tooltip" data-placement="top" title={a.label}
-                    className="btn"
+                    className={`btn btn-sm action-${a.slug}`}
                     onClick={() => onAction && onAction(a)}
                 >
                     <i className={a.icon}></i>

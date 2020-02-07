@@ -16,7 +16,8 @@ const actions = [
     { slug: 'run', label: 'Compile', icon: 'fas fa-play' },
     { slug: 'preview', label: 'Preview', icon: 'fas fa-play' },
     { slug: 'pretty', label: 'Pretty', icon: 'fas fa-paint-brush' },
-    { slug: 'test', label: 'Test', icon: 'fas fa-check' }
+    { slug: 'test', label: 'Test', icon: 'fas fa-check' },
+    { slug: 'solution', label: 'Solution', icon: 'fas fa-smile-wink' }
 ];
 
 //create your first component
@@ -95,9 +96,10 @@ export default class Home extends React.Component{
                 ]
             },
             editorSocket: null,
+            language: 'en',
             menuOpened: false,
             editorSize: 450,
-            editorMode: null,
+            config: null,
             codeHasBeenChanged: true,
             exercises: [],
             error: null,
@@ -109,6 +111,7 @@ export default class Home extends React.Component{
             current: null,
             currentInstructions: null,
             currentFileContent: null,
+            currentTranslation: 'en',
             currentFileName: null,
             currentFileExtension: null,
             possibleActions: [],
@@ -132,16 +135,9 @@ export default class Home extends React.Component{
             }
         };
     }
-    setEditorConfig(){
-        fetch(this.state.host+'/config').then(resp => resp.json()).then(config => {
-            this.setState({
-                editorMode: config.editor
-            });
-        });
-    }
     componentDidMount(){
         if(this.state.host){
-            this.setEditorConfig();
+            fetch(this.state.host+'/config').then(resp => resp.json()).then(config => this.setState({ config }));
             const session = Session.getSession();
             if(!session.active) Session.start({ payload: { showHelp: true } });
             else if(typeof session.payload.showHelp === 'undefined') Session.setPayload({ showHelp:true });
@@ -166,11 +162,13 @@ export default class Home extends React.Component{
             const compilerSocket = Socket.createScope('compiler');
             compilerSocket.whenUpdated((scope, data) => {
                 let state = { consoleLogs: scope.logs, consoleStatus: scope.status, possibleActions: actions.filter(a => data.allowed.includes(a.slug)) };
+
+                if(this.state.config && this.state.config.disable_grading) state.possibleActions = state.possibleActions.filter(a => a !== 'test');
                 if(typeof data.code == 'string') state.currentFileContent = data.code;
                 this.setState(state);
             });
             compilerSocket.onStatus('compiler-success', () => {
-                if(this.state.editorMode === "standalone") loadFile(this.state.currentSlug, this.state.currentFileName)
+                if(this.state.config.editor === "standalone") loadFile(this.state.currentSlug, this.state.currentFileName)
                     .then(content => this.setState({ currentFileContent: content, codeHasBeenChanged: false }));
             });
             compilerSocket.on("ask", ({ inputs }) => {
@@ -201,19 +199,19 @@ export default class Home extends React.Component{
                         menuOpened: false
                     });
                     if(files.length > 0){
-                        console.log(this.state.editorMode);
-                        if(this.state.editorMode === 'standalone') loadFile(slug, files[0].name).then(content => this.setState({
+                        console.log(this.state.config.editor);
+                        if(this.state.config.editor === 'standalone') loadFile(slug, files[0].name).then(content => this.setState({
                             currentFileContent: content,
                             currentFileName: files[0].name,
                             possibleActions: this.state.possibleActions.filter(a => a.slug !== 'preview'),
                             currentFileExtension: files[0].name.split('.').pop()
                         }));
 
-                        if(this.state.editorMode === 'gitpod') this.state.compilerSocket.emit("gitpod-open", { exerciseSlug: this.state.currentSlug, files: files.map(f => f.path) });
+                        if(this.state.config.editor === 'gitpod') this.state.compilerSocket.emit("gitpod-open", { exerciseSlug: this.state.currentSlug, files: files.map(f => f.path) });
                     }
                 })
                 .catch(error => console.log(error) || this.setState({ error: "There was an error loading the exercise: "+slug }));
-            loadReadme(slug).then(readme => {
+            loadReadme(slug, this.state.language).then(readme => {
                 const videoTutorial = !readme.attributes ? null : readme.attributes.tutorial || null;
                 const _readme = readme.body || readme;
                 this.setState({ readme: _readme, videoTutorial });
@@ -243,9 +241,10 @@ export default class Home extends React.Component{
             }
         };
 
+        if(!this.state.config) return "Loading configuration...";
         return <div>
-            { this.state.helpSteps[this.state.editorMode] && <Joyride
-                    steps={this.state.helpSteps[this.state.editorMode]}
+            { this.state.helpSteps[this.state.config.editor] && <Joyride
+                    steps={this.state.helpSteps[this.state.config.editor]}
                     continuous={true}
                     run={showHelp === true && this.state.getIndex(this.state.currentSlug) === 1}
                     locale={{ back: 'Previous', close: 'Close', last: 'Finish', next: 'Next' }}
@@ -263,14 +262,16 @@ export default class Home extends React.Component{
                     }}
                 />
             }
-            {this.state.editorMode === "standalone" ?
+            {this.state.config.editor === "standalone" ?
                 <SplitPane split="vertical" style={{ backgroundColor: "#333333"}} minSize={size.vertical.min} defaultSize={size.vertical.init}>
                     <Sidebar 
                         disabled={isPending(this.state.consoleStatus)}
                         previous={this.state.previous()}
                         next={this.state.next()}
                         exercises={this.state.exercises}
-                        className={`editor-${this.state.editorMode}`}
+                        translations={this.state.config.translations || ['en']}
+                        currentTranslation={this.state.currentTranslation}
+                        className={`editor-${this.state.config.editor}`}
                         onClick={slug => window.location.hash = "#"+slug}
                         onOpen={status => this.setState({ menuOpened: status })}
                     >
@@ -304,7 +305,7 @@ export default class Home extends React.Component{
                                     })}
                                 />
                                 <Terminal
-                                    mode={this.state.editorMode}
+                                    mode={this.state.config.editor}
                                     disabled={isPending(this.state.consoleStatus) || this.state.isSaving}
                                     host={this.state.host}
                                     status={this.state.isSaving ? { code: 'saving', message: getStatus('saving') } : this.state.consoleStatus}
@@ -339,8 +340,10 @@ export default class Home extends React.Component{
                         disabled={isPending(this.state.consoleStatus)}
                         previous={this.state.previous()}
                         next={this.state.next()}
+                        translations={this.state.config.translations || ['en']}
+                        currentTranslation={this.state.currentTranslation}
                         exercises={this.state.exercises}
-                        className={`editor-${this.state.editorMode}`}
+                        className={`editor-${this.state.config.editor}`}
                         onClick={slug => window.location.hash = "#"+slug}
                         onOpen={status => this.setState({ menuOpened: status })}
                     >

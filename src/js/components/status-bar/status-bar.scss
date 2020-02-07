@@ -1,10 +1,25 @@
+@keyframes float {
+	0% {
+		box-shadow: 0 5px 15px 0px rgba(0,0,0,0.6);
+		transform: translatey(0px);
+	}
+	50% {
+		box-shadow: 0 25px 15px 0px rgba(0,0,0,0.2);
+		transform: translatey(-10px);
+	}
+	100% {
+		box-shadow: 0 5px 15px 0px rgba(0,0,0,0.6);
+		transform: translatey(0px);
+	}
+}
+
 .status-bar{
     background: #1C1C1C;
     padding: 5px;
     color: white;
     &.fixed{
         position: fixed;
-        top: 40px;
+        top: 43px;
         bottom: 0;
         width: 100%;
         height: fit-content;
@@ -18,6 +33,16 @@
     }
     &.compiler-warning{ background: orange; }
     &.compiler-success, &.testing-success{ background: #003d1c; }
+    &.compiler-success .action-preview:after{
+        content: '↑ Click this button to preview your website';
+        position: absolute;
+        background: green;
+        width: 335px;
+        padding: 5px;
+        top: 40px;
+        left: 0px;
+	    animation: float 6s ease-in-out infinite;
+    }
     .button-bar{
         margin: 0;
         background: rgba(255, 255, 255, 0.1);

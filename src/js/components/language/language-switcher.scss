@@ -1,0 +1,40 @@
+.language-switcher{
+    cursor: pointer;
+    display: inline-block;
+    border-radius: 25px;
+    position: relative;
+    &:hover{border-radius: 25px;}
+    .icon{
+        width: 16px;
+        height: 17px;
+        background-repeat: no-repeat;
+        background-size: contain;
+        background-position: center center;
+        border-radius: 100%;
+        .current{
+            z-index: 10;
+        }
+    }
+    ul{
+        display: none;
+        position: absolute;
+        left: -2px;
+        top: -1px;
+        height: 27px;
+        background: white;
+        border-radius: 25px;
+        li{
+            list-style: none;
+            display: inline;
+            padding: 1px 3px;
+            margin-left: -6px;
+        }
+    }
+    &:hover{
+        border: 1px solid #f8f9fa;
+        background: white;
+        display: inline-block;
+        width: 70px;
+        ul{ display: inline-block; }
+    }
+}

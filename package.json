@@ -1,6 +1,6 @@
 {
   "name": "workspace",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -33,7 +33,7 @@
     "html-loader": "^0.5.5",
     "html-webpack-plugin": "^3.2.0",
     "monaco-editor-webpack-plugin": "^1.5.2",
-    "node-sass": "^4.11.0",
+    "node-sass": "^4.13.1",
     "pre-commit": "^1.2.2",
     "react-svg-loader": "^2.1.0",
     "remote-origin-url": "^1.0.0",
@@ -41,8 +41,8 @@
     "simple-git": "^1.122.0",
     "style-loader": "^0.19.0",
     "targz": "^1.0.1",
-    "webpack": "^4.0.1",
-    "webpack-cli": "^2.0.9",
+    "webpack": "^4.41.5",
+    "webpack-cli": "^3.1.1",
     "webpack-dev-server": "^3.3.1"
   },
   "babel": {
@@ -63,7 +63,7 @@
     "query-string": "^5.1.1",
     "react": "^16.4.1",
     "react-ace": "^5.9.0",
-    "react-dom": "^16.4.1",
+    "react-dom": "^16.12.0",
     "react-joyride": "^2.0.0-15",
     "react-monaco-editor": "^0.18.0",
     "react-polyfills": "0.0.1",
