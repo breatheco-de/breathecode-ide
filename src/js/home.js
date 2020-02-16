@@ -2,6 +2,8 @@ import React from 'react';
 import logo from '../img/breathecode.png';
 import Editor from './components/editor/Editor.js';
 import Terminal from './components/terminal/Terminal.js';
+import SmartInput from './components/smart-input/SmartInput.js';
+import Intro from './components/intro/Intro.js';
 import StatusBar from './components/status-bar/StatusBar.js';
 import Sidebar from './components/sidebar/sidebar.js';
 import SplitPane from 'react-split-pane';
@@ -16,8 +18,7 @@ const actions = [
     { slug: 'run', label: 'Compile', icon: 'fas fa-play' },
     { slug: 'preview', label: 'Preview', icon: 'fas fa-play' },
     { slug: 'pretty', label: 'Pretty', icon: 'fas fa-paint-brush' },
-    { slug: 'test', label: 'Test', icon: 'fas fa-check' },
-    { slug: 'solution', label: 'Solution', icon: 'fas fa-smile-wink' }
+    { slug: 'test', label: 'Test', icon: 'fas fa-check' }
 ];
 
 //create your first component
@@ -54,11 +55,11 @@ export default class Home extends React.Component{
                         content: 'Once you are satisfied with your code solution, you can go ahead to the next exercise.',
                         placement: 'bottom'
                     },
-                    {
-                        target: 'body',
-                        content: <span><h4>4) Deliver!</h4>After finishing all exercises run <code>$ bc deliver:exercises</code> on your command line to deliver the exercises into the breathecode platform.</span>,
-                        placement: 'center'
-                    }
+                    // {
+                    //     target: 'body',
+                    //     content: <span><h4>4) Deliver!</h4>After finishing all exercises run <code>$ bc deliver:exercises</code> on your command line to deliver the exercises into the breathecode platform.</span>,
+                    //     placement: 'center'
+                    // }
                 ],
                 gitpod: [
                     {
@@ -88,11 +89,11 @@ export default class Home extends React.Component{
                         content: 'Once you are satisfied with your code solution, you can go ahead to the next exercise.',
                         placement: 'bottom'
                     },
-                    {
-                        target: 'body',
-                        content: <span><h4>4) Deliver!</h4>After finishing all exercises run <code>$ bc deliver:exercises</code> on your command line to deliver the exercises into the breathecode platform.</span>,
-                        placement: 'center'
-                    }
+                    // {
+                    //     target: 'body',
+                    //     content: <span><h4>4) Deliver!</h4>After finishing all exercises run <code>$ bc deliver:exercises</code> on your command line to deliver the exercises into the breathecode platform.</span>,
+                    //     placement: 'center'
+                    // }
                 ]
             },
             editorSocket: null,
@@ -116,7 +117,11 @@ export default class Home extends React.Component{
             currentFileExtension: null,
             possibleActions: [],
             readme: '',
-            videoTutorial: null,
+
+            tutorial: null,
+            intro: null,
+            introOpen: true,
+
             getIndex: (slug) => {
                 for(let i=0; i<this.state.exercises.length; i++)
                     if(this.state.exercises[i].slug == slug) return i;
@@ -124,11 +129,15 @@ export default class Home extends React.Component{
                 return false;
             },
             next: () => {
+                if(this.state.introOpen && this.state.intro) return null;
+
                 const i = this.state.getIndex(this.state.currentSlug)+1;
                 if(typeof(this.state.exercises[i]) != 'undefined') return this.state.exercises[i];
                 else return null;
             },
             previous: () => {
+                if(this.state.introOpen && this.state.intro) return null;
+
                 const i = this.state.getIndex(this.state.currentSlug)-1;
                 if(typeof(this.state.exercises[i]) != 'undefined') return this.state.exercises[i];
                 else return null;
@@ -161,15 +170,25 @@ export default class Home extends React.Component{
             Socket.start(this.state.host);
             const compilerSocket = Socket.createScope('compiler');
             compilerSocket.whenUpdated((scope, data) => {
-                let state = { consoleLogs: scope.logs, consoleStatus: scope.status, possibleActions: actions.filter(a => data.allowed.includes(a.slug)) };
-
-                if(this.state.config && this.state.config.disable_grading) state.possibleActions = state.possibleActions.filter(a => a !== 'test');
+                let state = { 
+                    consoleLogs: scope.logs, 
+                    consoleStatus: scope.status, 
+                    possibleActions: actions.filter(a => data.allowed.includes(a.slug)) 
+                };
+                if(this.state.tutorial && this.state.tutorial!=='') state.possibleActions.push({ slug: 'tutorial', label: 'Video tutorial', icon: 'fas fa-smile' });
+                if(this.state.config && this.state.config.disable_grading) state.possibleActions = state.possibleActions.filter(a => a.slug !== 'test');
                 if(typeof data.code == 'string') state.currentFileContent = data.code;
                 this.setState(state);
             });
             compilerSocket.onStatus('compiler-success', () => {
-                if(this.state.config.editor === "standalone") loadFile(this.state.currentSlug, this.state.currentFileName)
-                    .then(content => this.setState({ currentFileContent: content, codeHasBeenChanged: false }));
+                if(this.state.config.editor === "standalone"){
+                    loadFile(this.state.currentSlug, this.state.currentFileName)
+                        .then(content => this.setState({ currentFileContent: content, codeHasBeenChanged: false }));
+                } 
+                if(typeof(this.state.config) && this.state.config.onCompilerSuccess === "open-browser"){
+                    const canDoPreview = this.state.possibleActions.find(a => a.slug === "preview");
+                    if(canDoPreview) window.open(this.state.host+'/preview');
+                }
             });
             compilerSocket.on("ask", ({ inputs }) => {
                 compilerSocket.emit('input', {
@@ -210,18 +229,30 @@ export default class Home extends React.Component{
                         if(this.state.config.editor === 'gitpod') this.state.compilerSocket.emit("gitpod-open", { exerciseSlug: this.state.currentSlug, files: files.map(f => f.path) });
                     }
                 })
-                .catch(error => console.log(error) || this.setState({ error: "There was an error loading the exercise: "+slug }));
+                .catch(error => {
+                    this.setState({ error: "There was an error loading the exercise: "+slug });
+                    localStorage.clear();
+                });
             loadReadme(slug, this.state.language).then(readme => {
-                const videoTutorial = !readme.attributes ? null : readme.attributes.tutorial || null;
+                const tutorial = !readme.attributes ? null : readme.attributes.tutorial || null;
+                const intro = !readme.attributes ? null : readme.attributes.intro || null;
                 const _readme = readme.body || readme;
-                this.setState({ readme: _readme, videoTutorial });
+                this.setState({ readme: _readme, tutorial, intro });
             });
         }
     }
     render(){
-        const { showHelp } = Session.getPayload();
+        let { showHelp } = Session.getPayload();
+        //close the help if there is a video
+        if(!this.state.introOpen || !this.state.intro) showHelp = false;
+
         if(!this.state.host) return (<div className="alert alert-danger text-center"> ⚠️ No host specified for the application</div>);
-        if(this.state.error) return <div className="alert alert-danger">{this.state.error}</div>;
+        if(this.state.error) return <div className="alert alert-danger">
+            {this.state.error}
+            <SmartInput onSave={(value) => {
+                window.location = "?host="+value;
+            }} />
+        </div>;
         const size = {
             vertical: {
                 min: 50,
@@ -275,7 +306,11 @@ export default class Home extends React.Component{
                         onClick={slug => window.location.hash = "#"+slug}
                         onOpen={status => this.setState({ menuOpened: status })}
                     >
-                        <MarkdownParser className="markdown" source={this.state.currentInstructions ? this.state.currentInstructions : this.state.readme} />
+                        { this.state.introOpen && this.state.intro ?
+                            <Intro url={this.state.intro} onClose={() => this.setState({ introOpen: false })} playing={!showHelp} />
+                            :
+                            <MarkdownParser className="markdown" source={this.state.currentInstructions ? this.state.currentInstructions : this.state.readme} />
+                        }
                     </Sidebar>
                     <div>
                         { this.state.files.length > 0 &&
@@ -310,7 +345,7 @@ export default class Home extends React.Component{
                                     host={this.state.host}
                                     status={this.state.isSaving ? { code: 'saving', message: getStatus('saving') } : this.state.consoleStatus}
                                     logs={this.state.consoleLogs}
-                                    actions={this.state.possibleActions}
+                                    actions={this.state.possibleActions.filter(a => (a.slug === "preview" && this.state.config.onCompilerSuccess === "open-browser") ? false : true)}
                                     onAction={(a) => {
                                         if(a.slug === 'preview') window.open(this.state.host+'/preview');
                                         else this.state.compilerSocket.emit(a.slug, { exerciseSlug: this.state.currentSlug });
@@ -324,15 +359,16 @@ export default class Home extends React.Component{
                 </SplitPane>
                 :
                 <div>
-                    { !this.state.menuOpened && this.state.files.length > 0 &&
+                    { !this.state.menuOpened && this.state.files.length > 0 && (!this.state.introOpen || !this.state.intro) &&
                         <StatusBar
-                            actions={this.state.possibleActions}
+                            actions={this.state.possibleActions.filter(a => (a.slug === "preview" && this.state.config.onCompilerSuccess === "open-browser") ? false : true)}
                             status={this.state.consoleStatus}
                             exercises={this.state.exercises}
                             disabled={isPending(this.state.consoleStatus)}
                             onAction={(a) => {
                                 if(a.slug === 'preview') window.open(this.state.host+'/preview');
-                                this.state.compilerSocket.emit(a.slug, { exerciseSlug: this.state.currentSlug });
+                                else if(a.slug === 'tutorial') window.open(this.state.tutorial);
+                                else this.state.compilerSocket.emit(a.slug, { exerciseSlug: this.state.currentSlug });
                             }}
                         />
                     }
@@ -347,7 +383,11 @@ export default class Home extends React.Component{
                         onClick={slug => window.location.hash = "#"+slug}
                         onOpen={status => this.setState({ menuOpened: status })}
                     >
-                        <MarkdownParser className="markdown" source={this.state.currentInstructions ? this.state.currentInstructions : this.state.readme} />
+                        { this.state.introOpen && this.state.intro ?
+                            <Intro url={this.state.intro} onClose={() => this.setState({ introOpen: false })} playing={!showHelp} />
+                            :
+                            <MarkdownParser className="markdown" source={this.state.currentInstructions ? this.state.currentInstructions : this.state.readme} />
+                        }
                     </Sidebar>
                 </div>
             }
