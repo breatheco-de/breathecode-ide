@@ -176,7 +176,7 @@ export default class Home extends React.Component{
                     consoleStatus: scope.status, 
                     possibleActions: actions.filter(a => data.allowed.includes(a.slug)) 
                 };
-                if(this.state.tutorial && this.state.tutorial!=='') state.possibleActions.push({ slug: 'tutorial', label: 'Video tutorial', icon: 'fas fa-smile' });
+                if(this.state.tutorial && this.state.tutorial!=='') state.possibleActions.push({ slug: 'tutorial', label: 'Video tutorial', icon: 'fas fa-graduate' });
                 if(this.state.config && this.state.config.disable_grading) state.possibleActions = state.possibleActions.filter(a => a.slug !== 'test');
                 if(typeof data.code == 'string') state.currentFileContent = data.code;
                 this.setState(state);
