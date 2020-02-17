@@ -69,7 +69,7 @@ const actions = {
             .catch(error => reject(error))
         );
     },
-    loadReadme: function(exerciseSlug, language='en'){
+    loadReadme: function(exerciseSlug, language='us'){
         return new Promise((resolve, reject) =>
             fetch(HOST+'/exercise/'+exerciseSlug+'/readme?lang='+language).then(resp => {
                 if(resp.status == 200){
