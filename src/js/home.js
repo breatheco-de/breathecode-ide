@@ -19,7 +19,7 @@ const actions = [
     { slug: 'preview', label: 'Preview', icon: 'fas fa-play' },
     { slug: 'pretty', label: 'Pretty', icon: 'fas fa-paint-brush' },
     { slug: 'test', label: 'Test', icon: 'fas fa-check' },
-    { slug: 'reset', label: 'Reset this exercise', icon: 'fas fa-sync', confirm: true, refresh: true }
+    { slug: 'reset', label: 'Reset', icon: 'fas fa-sync', confirm: true, refresh: true }
 ];
 
 //create your first component
