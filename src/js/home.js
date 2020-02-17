@@ -18,7 +18,8 @@ const actions = [
     { slug: 'run', label: 'Compile', icon: 'fas fa-play' },
     { slug: 'preview', label: 'Preview', icon: 'fas fa-play' },
     { slug: 'pretty', label: 'Pretty', icon: 'fas fa-paint-brush' },
-    { slug: 'test', label: 'Test', icon: 'fas fa-check' }
+    { slug: 'test', label: 'Test', icon: 'fas fa-check' },
+    { slug: 'reset', label: 'Reset this exercise', icon: 'fas fa-sync', confirm: true }
 ];
 
 //create your first component
@@ -180,14 +181,13 @@ export default class Home extends React.Component{
                 if(typeof data.code == 'string') state.currentFileContent = data.code;
                 this.setState(state);
             });
-            compilerSocket.onStatus('compiler-success', () => {
+            compilerSocket.onStatus('compiler-success', (data) => {
                 if(this.state.config.editor === "standalone"){
                     loadFile(this.state.currentSlug, this.state.currentFileName)
                         .then(content => this.setState({ currentFileContent: content, codeHasBeenChanged: false }));
                 } 
                 if(typeof(this.state.config) && this.state.config.onCompilerSuccess === "open-browser"){
-                    const canDoPreview = this.state.possibleActions.find(a => a.slug === "preview");
-                    if(canDoPreview) window.open(this.state.host+'/preview');
+                    if(data.allowed.includes("preview")) window.open(this.state.host+'/preview');
                 }
             });
             compilerSocket.on("ask", ({ inputs }) => {
@@ -347,8 +347,10 @@ export default class Home extends React.Component{
                                     logs={this.state.consoleLogs}
                                     actions={this.state.possibleActions.filter(a => (a.slug === "preview" && this.state.config.onCompilerSuccess === "open-browser") ? false : true)}
                                     onAction={(a) => {
-                                        if(a.slug === 'preview') window.open(this.state.host+'/preview');
-                                        else this.state.compilerSocket.emit(a.slug, { exerciseSlug: this.state.currentSlug });
+                                        if(a.confirm !== true || window.confirm("Are you sure?")){
+                                            if(a.slug === 'preview') window.open(this.state.host+'/preview');
+                                            else this.state.compilerSocket.emit(a.slug, { exerciseSlug: this.state.currentSlug });
+                                        }
                                     }}
                                     height={window.innerHeight - this.state.editorSize}
                                     exercise={this.state.currentSlug}
@@ -366,9 +368,11 @@ export default class Home extends React.Component{
                             exercises={this.state.exercises}
                             disabled={isPending(this.state.consoleStatus)}
                             onAction={(a) => {
-                                if(a.slug === 'preview') window.open(this.state.host+'/preview');
-                                else if(a.slug === 'tutorial') window.open(this.state.tutorial);
-                                else this.state.compilerSocket.emit(a.slug, { exerciseSlug: this.state.currentSlug });
+                                if(a.confirm !== true || window.confirm("Are you sure?")){
+                                    if(a.slug === 'preview') window.open(this.state.host+'/preview');
+                                    else if(a.slug === 'tutorial') window.open(this.state.tutorial);
+                                    else this.state.compilerSocket.emit(a.slug, { exerciseSlug: this.state.currentSlug });
+                                }
                             }}
                         />
                     }
