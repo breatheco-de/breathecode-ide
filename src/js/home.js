@@ -19,8 +19,6 @@ const actions = [
     { slug: 'preview', label: 'Preview', icon: 'fas fa-play' },
     { slug: 'pretty', label: 'Pretty', icon: 'fas fa-paint-brush' },
     { slug: 'test', label: 'Test', icon: 'fas fa-check' },
-    // refresh:true is a quick fix that needs to be improved, instead of refreshing the website
-    // we shuld load the current file again.
     { slug: 'reset', label: 'Reset this exercise', icon: 'fas fa-sync', confirm: true, refresh: true }
 ];
 
