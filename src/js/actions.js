@@ -30,7 +30,7 @@ const actions = {
         return new Promise((resolve, reject) =>
             fetch(HOST+'/exercise/'+exerciseSlug)
                 .then(resp => {
-                    if(resp.status === 200) return resp.json();
+                    if(resp.status >= 200 && resp.status < 400) return resp.json();
                     else if(resp.status === 400){
                         resp.json()
                             .then(error => {
