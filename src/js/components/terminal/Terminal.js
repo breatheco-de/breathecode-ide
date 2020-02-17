@@ -13,6 +13,17 @@ export default class Terminal extends React.Component {
     super(props);
     this.state = {
     };
+    this.messagesEndRef = React.createRef();
+  }
+
+  componentDidMount () {
+    this.scrollToBottom();
+  }
+  componentDidUpdate () {
+    this.scrollToBottom();
+  }
+  scrollToBottom(){
+    this.messagesEndRef.current.scrollTop = this.messagesEndRef.current.scrollHeight;
   }
 
   render() {
@@ -31,7 +42,7 @@ export default class Terminal extends React.Component {
                 </button>
             )}
         </div>
-        <ul className="logs" style={{height: this.props.height}}>
+        <ul className="logs" style={{height: this.props.height}}  ref={this.messagesEndRef}>
             {this.props.logs.map((log,i)=>(
                 <li key={i}>
                     <pre>
@@ -49,7 +60,7 @@ Terminal.propTypes = {
   height: PropTypes.number,
   disabled: PropTypes.bool,
   onAction: PropTypes.func,
-  actions: PropTypes.array,
+  actions: PropTypes.array
 };
 Terminal.defaultProps = {
   status: '',

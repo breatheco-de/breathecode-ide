@@ -98,7 +98,6 @@ export default class Home extends React.Component{
                 ]
             },
             editorSocket: null,
-            language: 'en',
             menuOpened: false,
             editorSize: 450,
             config: null,
@@ -110,14 +109,15 @@ export default class Home extends React.Component{
             consoleLogs: [],
             consoleStatus: null,
             isSaving: false,
+            
             current: null,
             currentInstructions: null,
             currentFileContent: null,
-            currentTranslation: 'en',
+            currentTranslation: 'us',
+            currentFileTranslations: ['us'],
             currentFileName: null,
             currentFileExtension: null,
             possibleActions: [],
-            readme: '',
 
             tutorial: null,
             intro: null,
@@ -157,7 +157,9 @@ export default class Home extends React.Component{
                     this.setState({ exercises, error: null });
                     if(!window.location.hash || window.location.hash == '#'){
                         const _savedSlug = localStorage.getItem('exercise-slug');
-                        if(_savedSlug && typeof _savedSlug == "string" && _savedSlug != "") this.loadInstructions(_savedSlug);
+                        if(_savedSlug && typeof _savedSlug == "string" && _savedSlug != ""){
+                            this.loadInstructions(_savedSlug);
+                        }
                         else this.loadInstructions(exercises[0].slug);
                     } 
                 })
@@ -207,11 +209,12 @@ export default class Home extends React.Component{
         }
         else{
             loadSingleExercise(slug)
-                .then(files => {
+                .then(({ exercise, files }) => {
                     localStorage.setItem('exercise-slug', slug);
                     this.setState({
                         files,
                         currentSlug: slug,
+                        current: exercise,
                         consoleLogs: [],
                         codeHasBeenChanged: true,
                         consoleStatus: { code: 'ready', message: getStatus('ready') },
@@ -226,18 +229,21 @@ export default class Home extends React.Component{
                             currentFileExtension: files[0].name.split('.').pop()
                         }));
 
-                        if(this.state.config.editor === 'gitpod') this.state.compilerSocket.emit("gitpod-open", { exerciseSlug: this.state.currentSlug, files: files.map(f => f.path) });
+                        if(this.state.config.editor === 'gitpod') this.state.compilerSocket.emit("gitpod-open", { 
+                            exerciseSlug: this.state.currentSlug, 
+                            files: files.map(f => f.path)
+                        });
                     }
                 })
                 .catch(error => {
                     this.setState({ error: "There was an error loading the exercise: "+slug });
-                    localStorage.clear();
+                    console.error(error);
                 });
-            loadReadme(slug, this.state.language).then(readme => {
+            loadReadme(slug, this.state.currentTranslation).then(readme => {
                 const tutorial = !readme.attributes ? null : readme.attributes.tutorial || null;
                 const intro = !readme.attributes ? null : readme.attributes.intro || null;
                 const _readme = readme.body || readme;
-                this.setState({ readme: _readme, tutorial, intro });
+                this.setState({ currentInstructions: _readme, tutorial, intro });
             });
         }
     }
@@ -299,17 +305,24 @@ export default class Home extends React.Component{
                         disabled={isPending(this.state.consoleStatus)}
                         previous={this.state.previous()}
                         next={this.state.next()}
+                        current={this.state.current}
                         exercises={this.state.exercises}
-                        translations={this.state.config.translations || ['en']}
-                        currentTranslation={this.state.currentTranslation}
+                        defaultTranslation={this.state.currentTranslation}
                         className={`editor-${this.state.config.editor}`}
                         onClick={slug => window.location.hash = "#"+slug}
+                        onLanguageClick={lang => loadReadme(this.state.current.slug, lang).then(readme => {
+                                const tutorial = !readme.attributes ? null : readme.attributes.tutorial || null;
+                                const intro = !readme.attributes ? null : readme.attributes.intro || null;
+                                const _readme = readme.body || readme;
+                                this.setState({ currentInstructions: _readme, tutorial, intro, currentTranslation: lang });
+                            })
+                        }
                         onOpen={status => this.setState({ menuOpened: status })}
                     >
                         { this.state.introOpen && this.state.intro ?
                             <Intro url={this.state.intro} onClose={() => this.setState({ introOpen: false })} playing={!showHelp} />
                             :
-                            <MarkdownParser className="markdown" source={this.state.currentInstructions ? this.state.currentInstructions : this.state.readme} />
+                            <MarkdownParser className="markdown" source={this.state.currentInstructions} />
                         }
                     </Sidebar>
                     <div>
@@ -384,17 +397,24 @@ export default class Home extends React.Component{
                         disabled={isPending(this.state.consoleStatus)}
                         previous={this.state.previous()}
                         next={this.state.next()}
-                        translations={this.state.config.translations || ['en']}
-                        currentTranslation={this.state.currentTranslation}
+                        current={this.state.current}
+                        defaultTranslation={this.state.currentTranslation}
                         exercises={this.state.exercises}
                         className={`editor-${this.state.config.editor}`}
                         onClick={slug => window.location.hash = "#"+slug}
                         onOpen={status => this.setState({ menuOpened: status })}
+                        onLanguageClick={lang => loadReadme(this.state.current.slug, lang).then(readme => {
+                                const tutorial = !readme.attributes ? null : readme.attributes.tutorial || null;
+                                const intro = !readme.attributes ? null : readme.attributes.intro || null;
+                                const _readme = readme.body || readme;
+                                this.setState({ currentInstructions: _readme, tutorial, intro, currentTranslation: lang });
+                            })
+                        }
                     >
                         { this.state.introOpen && this.state.intro ?
                             <Intro url={this.state.intro} onClose={() => this.setState({ introOpen: false })} playing={!showHelp} />
                             :
-                            <MarkdownParser className="markdown" source={this.state.currentInstructions ? this.state.currentInstructions : this.state.readme} />
+                            <MarkdownParser className="markdown" source={this.state.currentInstructions} />
                         }
                     </Sidebar>
                 </div>

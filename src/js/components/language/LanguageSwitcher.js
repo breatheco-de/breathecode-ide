@@ -1,12 +1,6 @@
 import React from "react";
 import PropTypes from 'prop-types';
 import './language-switcher.scss';
-const icons = {
-    es: 'https://ucarecdn.com/995a2dbc-c73b-463b-b6f9-9029a8cb0a2f/spainflag32.png',
-    en: 'https://ucarecdn.com/18797504-01bb-4b22-97e9-ebccc207def9/unitedstatesusaflag32.png',
-    it: 'https://ucarecdn.com/18797504-01bb-4b22-97e9-ebccc207def9/unitedstatesusaflag32.png',
-    fr: 'https://ucarecdn.com/18797504-01bb-4b22-97e9-ebccc207def9/unitedstatesusaflag32.png',
-};
 
 const Icon = ({ url, className }) => <div className={"icon btn btn-sm "+className} style={{ backgroundImage: `url(${url}` }}>{' '}</div>;
 Icon.propTypes = {
@@ -17,16 +11,16 @@ Icon.defaultProps = {
   className: '',
 };
 export const LanguageSwitcher = ({ current, translations, onClick }) => {
-    const _enabledLangs = translations.filter(l => l !== current);
+    const _enabledLangs = translations;//.filter(l => l !== current);
     return (<div className="language-switcher">
-        <ul style={{ width: _enabledLangs.length * 19 }}>
+        <ul>
             {
                 _enabledLangs.map( lang => {
-                    return (<li key={lang} onClick={() => onClick(lang)}><Icon url={icons[lang]} /></li>);
+                    return (<li key={lang} onClick={() => lang != current ? onClick(lang) : null}><Icon url={`https://www.countryflags.io/${lang}/flat/64.png`} /></li>);
                 })
             }
         </ul>
-        <Icon className={"current"} url={icons[current]} />
+        <Icon className={"current"} url={`https://www.countryflags.io/${current}/flat/64.png`} />
     </div>);
 };
 LanguageSwitcher.propTypes = {

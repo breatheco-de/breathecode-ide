@@ -30,14 +30,30 @@ const actions = {
         return new Promise((resolve, reject) =>
             fetch(HOST+'/exercise/'+exerciseSlug)
                 .then(resp => {
-                    if(resp.ok) return resp.json();
+                    if(resp.status === 200) return resp.json();
+                    else if(resp.status === 400){
+                        resp.json()
+                            .then(error => {
+                                if(error.type == 'not-found-error'){
+                                    const _savedSlug = localStorage.getItem('exercise-slug');
+                                    if(_savedSlug){
+                                        localStorage.clear();
+                                        window.location.href = "/";
+                                    } 
+                                }
+                                throw new Error(error.message);
+                            })
+                            .catch(error => {
+                                throw new Error('There seems to be an error connecting with the server');
+                            });
+                    }
                     else throw new Error('There seems to be an error connecting with the server');
                 })
-                .then(files => {
-                    if(Array.isArray(files)) resolve(files);
+                .then(exercise => {
+                    if(exercise && Array.isArray(exercise.files)) resolve(exercise);
                     else{
-                        console.log("Single exercise: ", files);
-                        throw new Error('Invalid array of files found for the exercise', files);
+                        console.log("Single exercise: ", exercise);
+                        throw new Error('Invalid array of files found for the exercise', exercise);
                     }
                 })
                 .catch((error) => {

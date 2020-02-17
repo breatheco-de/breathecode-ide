@@ -3,7 +3,7 @@
     display: inline-block;
     border-radius: 25px;
     position: relative;
-    &:hover{border-radius: 25px;}
+    padding: 1px;
     .icon{
         width: 16px;
         height: 17px;
@@ -11,6 +11,7 @@
         background-size: contain;
         background-position: center center;
         border-radius: 100%;
+        background-color: rgba(0,0,0,0.2);
         .current{
             z-index: 10;
         }
@@ -18,23 +19,26 @@
     ul{
         display: none;
         position: absolute;
-        left: -2px;
-        top: -1px;
-        height: 27px;
+        left: -26px;
         background: white;
         border-radius: 25px;
         li{
             list-style: none;
-            display: inline;
-            padding: 1px 3px;
-            margin-left: -6px;
+            display: block;
+            margin: 0;
+            padding: 1px 2px;
+            .icon:hover{
+                background-size: 150%;
+            }
+        }
+        li:first-child{
+            margin-top: -4px;
         }
     }
     &:hover{
         border: 1px solid #f8f9fa;
         background: white;
         display: inline-block;
-        width: 70px;
         ul{ display: inline-block; }
     }
 }

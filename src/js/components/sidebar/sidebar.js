@@ -12,7 +12,7 @@ export default class Sidebar extends React.Component {
         };
     }
     render(){
-        const { className, children, next, previous, disabled, onClick, exercises, onOpen, currentTanslation, translations } = this.props;
+        const { className, children, current, next, previous, disabled, onClick, onLanguageClick, exercises, onOpen, defaultTranslation } = this.props;
 
         return (<div className={className}>
             <div className={`prev-next-bar`}>
@@ -20,7 +20,13 @@ export default class Sidebar extends React.Component {
                     this.setState({ open: !this.state.open });
                     if(onOpen) onOpen(!this.state.open);
                 }} className="btn text-white btn-sm"><i className="fas fa-bars"></i></button>}
-                <LanguageSwitcher current={currentTanslation} translations={translations} />
+                <LanguageSwitcher 
+                    current={defaultTranslation} 
+                    translations={current ? [defaultTranslation].concat(current.translations.filter(t => t !== defaultTranslation)): ['us']} 
+                    onClick={(lang) => {
+                        onLanguageClick && onLanguageClick(lang);
+                    }}
+                />
                 {next && 
                     <button className="next-exercise btn btn-dark btn-sm" disabled={disabled} onClick={() => {
                         this.setState({ open: false });
@@ -38,9 +44,9 @@ export default class Sidebar extends React.Component {
                     </button>
                 }
             </div>
-            <Menu className={`${this.state.open ? "open":""}`} exercises={exercises} onClick={slug => {
+            <Menu className={`${this.state.open ? "open":""}`} exercises={exercises} onClick={ex => {
                 this.setState({ open: false });
-                onClick(slug);
+                onClick(ex.slug);
             }} />
             {children}
         </div>);
@@ -49,23 +55,26 @@ export default class Sidebar extends React.Component {
 
 Sidebar.propTypes = {
   className: PropTypes.string,
-  currentTanslation: PropTypes.string,
+  defaultTranslation: PropTypes.string,
   previous: PropTypes.object,
   next: PropTypes.object,
+  current: PropTypes.object,
   children: PropTypes.node,
   disabled: PropTypes.bool,
+  onLanguageClick: PropTypes.func,
   onClick: PropTypes.func,
   onOpen: PropTypes.func,
-  exercises: PropTypes.array,
-  translations: PropTypes.array
+  exercises: PropTypes.array
 };
 Sidebar.defaultProps = {
   className: '',
-  currentTanslation: 'en',
-  children: null,
+  defaultTranslation: 'us',
+  next: null,
+  previous: null,
+  current: null,
   disabled: false,
   onOpen: null,
+  onLanguageClick: null,
   onClick: null,
-  exercises: [],
-  translations: []
+  exercises: []
 };
