@@ -19,7 +19,9 @@ const actions = [
     { slug: 'preview', label: 'Preview', icon: 'fas fa-play' },
     { slug: 'pretty', label: 'Pretty', icon: 'fas fa-paint-brush' },
     { slug: 'test', label: 'Test', icon: 'fas fa-check' },
-    { slug: 'reset', label: 'Reset this exercise', icon: 'fas fa-sync', confirm: true }
+    // refresh:true is a quick fix that needs to be improved, instead of refreshing the website
+    // we shuld load the current file again.
+    { slug: 'reset', label: 'Reset this exercise', icon: 'fas fa-sync', confirm: true, refresh: true }
 ];
 
 //create your first component
@@ -350,6 +352,10 @@ export default class Home extends React.Component{
                                         if(a.confirm !== true || window.confirm("Are you sure?")){
                                             if(a.slug === 'preview') window.open(this.state.host+'/preview');
                                             else this.state.compilerSocket.emit(a.slug, { exerciseSlug: this.state.currentSlug });
+                                            if(a.slug === 'reset'){
+                                                loadFile(this.state.currentSlug, this.state.currentFileName)
+                                                    .then(content => this.setState({ currentFileContent: content, codeHasBeenChanged: false }));
+                                            }
                                         }
                                     }}
                                     height={window.innerHeight - this.state.editorSize}
