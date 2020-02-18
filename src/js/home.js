@@ -178,7 +178,7 @@ export default class Home extends React.Component{
                     consoleStatus: scope.status, 
                     possibleActions: actions.filter(a => data.allowed.includes(a.slug)) 
                 };
-                if(this.state.tutorial && this.state.tutorial!=='') state.possibleActions.push({ slug: 'tutorial', label: 'Video tutorial', icon: 'fas fa-graduate' });
+                if(this.state.tutorial && this.state.tutorial!=='') state.possibleActions.push({ slug: 'tutorial', label: 'Video tutorial', icon: 'fas fa-graduation-cap' });
                 if(this.state.config && this.state.config.disable_grading) state.possibleActions = state.possibleActions.filter(a => a.slug !== 'test');
                 if(typeof data.code == 'string') state.currentFileContent = data.code;
                 this.setState(state);
@@ -249,8 +249,9 @@ export default class Home extends React.Component{
     }
     render(){
         let { showHelp } = Session.getPayload();
-        //close the help if there is a video
-        if(!this.state.introOpen || !this.state.intro) showHelp = false;
+        
+        //close the help if there is a video open right now
+        if(this.state.introOpen && this.state.intro) showHelp = false;
 
         if(!this.state.host) return (<div className="alert alert-danger text-center"> ⚠️ No host specified for the application</div>);
         if(this.state.error) return <div className="alert alert-danger">
