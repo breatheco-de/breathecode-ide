@@ -52,7 +52,7 @@ module.exports = {
       languages: ['javascript','json','html','css','scss', 'typescript']
     }),
     new HtmlWebpackPlugin({
-        favicon: '4geeks.ico',
+        favicon: 'bc.ico',
         template: 'template.html'
     })
   ]

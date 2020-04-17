@@ -20,9 +20,9 @@ export const getStatus = function(status='initializing'){
         case "saving": return "💾 Saving Files...";
 
         case "ready": return "🐶 Ready...";
-        case "compiler-error": return `${bad()} Your code has errors`;
-        case "compiler-warning": return "⚠️ Your code compiled, but with some warnings";
-        case "compiler-success": return `Successfully built. ${good()}`;
+        case "compiler-error": return `Compiler error.`;
+        case "compiler-warning": return "⚠️ Compiled with warnings";
+        case "compiler-success": return `Compiled.`;
         case "testing-error": return `Not as expected ${bad()}`;
         case "testing-success": return `Everything as expected ${good()}`;
         case "internal-error": return " 🔥💻 Woops! There has been an internal error";
@@ -33,14 +33,15 @@ export const getStatus = function(status='initializing'){
     }
 };
 
-export const isPending = (status) => (status) ? (['initializing', 'compiling', 'testing', 'pending', 'conecting' ].indexOf(status.code || status) > 0) : true;
+export const isPending = (status) => (status) ? (['initializing', 'compiling', 'testing', 'pending', 'conecting','internal-error' ].indexOf(status.code || status) > 0) : true;
 
 const actions = ['build','prettify', 'test', 'run', 'input', 'gitpod-open', 'preview', 'reset'];
 
 export default {
     socket: null,
-    start: function(host){
+    start: function(host, onDisconnect=null){
         this.socket = io.connect(host);
+        this.socket.on('disconnect', ()=> onDisconnect && onDisconnect());
     },
     createScope: function(scopeName){
 
@@ -79,7 +80,9 @@ export default {
             if(data.logs) scope.logs = scope.logs.concat(data.logs);
             if(data.status) scope.status = {
                 code: data.status,
-                message: getStatus(data.status)
+                message: (data.data) ? data.data.message || getStatus(data.status) : getStatus(data.status),
+                gif: data.data ? data.data.gif : null,
+                video: data.data ? data.data.video: null
             };
 
             if(typeof scope.actionCallBacks[data.action] == 'function') scope.actionCallBacks[data.action](data, scope);
