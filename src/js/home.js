@@ -158,7 +158,7 @@ export default class Home extends React.Component{
                         .then((exercises) => {
                             this.setState({ exercises, error: null });
                             if(!window.location.hash || window.location.hash == '#'){
-                                const _savedSlug = localStorage.getItem('exercise-slug'+session.session);
+                                const _savedSlug = localStorage.getItem('exercise-slug');
                                 if(_savedSlug && typeof _savedSlug == "string" && _savedSlug != ""){
                                     this.loadInstructions(_savedSlug);
                                 }
@@ -224,7 +224,7 @@ export default class Home extends React.Component{
         }
         else{
             loadSingleExercise(slug)
-                .then(({ exercise, files }) => {
+            .then(({ exercise, files }) => {
                     localStorage.setItem('exercise-slug', slug);
                     this.setState({
                         files,
