@@ -229,7 +229,7 @@ export default class Home extends React.Component{
                             currentFileExtension: files[0].name.split('.').pop()
                         }));
 
-                        if(this.state.config.editor === 'gitpod') this.state.compilerSocket.emit("gitpod-open", { 
+                        if(this.state.config.editor === 'gitpod' && this.state.config.grading === 'isolated') this.state.compilerSocket.emit("gitpod-open", { 
                             exerciseSlug: this.state.currentSlug, 
                             files: files.map(f => f.path)
                         });
