@@ -32,7 +32,8 @@
         background: #6e0b0b;
     }
     &.compiler-warning{ background: orange; }
-    &.compiler-success, &.testing-success{ background: #003d1c; }
+    &.compiler-success{ background: #2f3a34; }
+    &.testing-success{ background: #006d31; }
     &.compiler-success .action-preview:after{
         content: '↑ Click this button to preview your website';
         position: absolute;

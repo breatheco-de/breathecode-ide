@@ -46,42 +46,16 @@ body{
         top: 0px;
     }
 }
-.credits{
-    position: fixed;
-    font-size: 11px;
-    z-index: 10;
-    span{
-        float: right;
-        margin-left: 6px;
-    }
-    .bclogo{
-        width: 30px;
-        height: 30px;
-    }
-    &.top-right{
-        right: 10px;
-        top: 5px;
-    }
-    &.top-center{
-        left: 50vw;
-        top: 5px;
-        transform: translateX(-50%);
-    }
-    &.bottom-center{
-        left: 50vw;
-        bottom: 5px;
-        transform: translateX(-50%);
-    }
-    &.bottom-left{
-        left: 0;
-        bottom: 5px;
-    }
+.centered-box{
+    position: absolute;
+    top: 50vh;
+    left: 50vw;
+    transform: translate(-50%,-50%);
 }
 .empty-editor{
     text-align: center;
     width: 100%;
 }
-
 
 .glow{ animation: glow 1s ease-in-out infinite alternate; }
 .status-bar.ready .status{ animation: glow 1s ease-in-out infinite alternate; }

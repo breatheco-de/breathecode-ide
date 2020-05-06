@@ -6,8 +6,9 @@ import SmartInput from './components/smart-input/SmartInput.js';
 import Intro from './components/intro/Intro.js';
 import StatusBar from './components/status-bar/StatusBar.js';
 import Sidebar from './components/sidebar/sidebar.js';
+import InternalError from './components/internal-error/internal-error.js';
 import SplitPane from 'react-split-pane';
-import { MarkdownParser } from "@breathecode/ui-components";
+import { MarkdownParser, Loading } from "@breathecode/ui-components";
 import Socket, { isPending, getStatus } from './socket';
 import { getHost, loadExercises, loadSingleExercise, loadFile, saveFile, loadReadme } from './actions.js';
 import Joyride from 'react-joyride';
@@ -147,58 +148,72 @@ export default class Home extends React.Component{
     }
     componentDidMount(){
         if(this.state.host){
-            fetch(this.state.host+'/config').then(resp => resp.json()).then(config => this.setState({ config }));
-            const session = Session.getSession();
-            if(!session.active) Session.start({ payload: { showHelp: true } });
-            else if(typeof session.payload.showHelp === 'undefined') Session.setPayload({ showHelp:true });
-
-            loadExercises()
-                .then((exercises) => {
-                    this.setState({ exercises, error: null });
-                    if(!window.location.hash || window.location.hash == '#'){
-                        const _savedSlug = localStorage.getItem('exercise-slug');
-                        if(_savedSlug && typeof _savedSlug == "string" && _savedSlug != ""){
-                            this.loadInstructions(_savedSlug);
+            fetch(this.state.host+'/config').then(resp => resp.json()).then(config => {
+            
+                    const session = Session.getSession(config.session || "bc-exercises");
+                    if(!session.active) Session.start({ payload: { showHelp: true } }, config.session || "bc-exercises");
+                    else if(typeof session.payload.showHelp === 'undefined') Session.setPayload({ showHelp:true });
+        
+                    loadExercises()
+                        .then((exercises) => {
+                            this.setState({ exercises, error: null });
+                            if(!window.location.hash || window.location.hash == '#'){
+                                const _savedSlug = localStorage.getItem('exercise-slug');
+                                if(_savedSlug && typeof _savedSlug == "string" && _savedSlug != ""){
+                                    this.loadInstructions(_savedSlug);
+                                }
+                                else this.loadInstructions(exercises[0].slug);
+                            } 
+                        })
+                        .catch(error => this.setState({ error: "There was an error loading the excercise list from "+this.state.host }));
+        
+                    //check for changes on the hash
+                    window.addEventListener("hashchange", () => this.loadInstructions());
+                    if(window.location.hash && window.location.hash!='#') this.loadInstructions();
+        
+                    //connect to the compiler
+                    Socket.start(this.state.host, () => { // <-- On Disconnect Callback!
+                        const consoleStatus = {
+                            code: "internal-error",
+                            message: "It seems that the exercise engine is disconnected",
+                            gif: "https://github.com/breatheco-de/breathecode-cli/blob/master/docs/errors/uknown.gif?raw=true",
+                            video: "https://www.youtube.com/watch?v=gD1Sa99GiE4"
+                        };
+                        this.setState({ consoleStatus });
+                    });
+                    const compilerSocket = Socket.createScope('compiler');
+                    compilerSocket.whenUpdated((scope, data) => {
+                        let state = { 
+                            consoleLogs: scope.logs, 
+                            consoleStatus: scope.status, 
+                            possibleActions: actions.filter(a => data.allowed.includes(a.slug)) 
+                        };
+                        if(this.state.tutorial && this.state.tutorial!=='') state.possibleActions.push({ slug: 'tutorial', label: 'Video tutorial', icon: 'fas fa-graduation-cap' });
+                        if(this.state.config && this.state.config.disable_grading) state.possibleActions = state.possibleActions.filter(a => a.slug !== 'test');
+                        if(typeof data.code == 'string') state.currentFileContent = data.code;
+                        this.setState(state);
+                    });
+                    compilerSocket.onStatus('compiler-success', (data) => {
+                        if(this.state.config.editor === "standalone"){
+                            loadFile(this.state.currentSlug, this.state.currentFileName)
+                                .then(content => this.setState({ currentFileContent: content, codeHasBeenChanged: false }));
+                        } 
+                        if(typeof(this.state.config) && this.state.config.onCompilerSuccess === "open-browser"){
+                            if(data.allowed.includes("preview")) window.open(this.state.host+'/preview');
                         }
-                        else this.loadInstructions(exercises[0].slug);
-                    } 
-                })
-                .catch(error => this.setState({ error: "There was an error loading the excercise list from "+this.state.host }));
-
-            //check for changes on the hash
-            window.addEventListener("hashchange", () => this.loadInstructions());
-            if(window.location.hash && window.location.hash!='#') this.loadInstructions();
-
-            //connect to the compiler
-            Socket.start(this.state.host);
-            const compilerSocket = Socket.createScope('compiler');
-            compilerSocket.whenUpdated((scope, data) => {
-                let state = { 
-                    consoleLogs: scope.logs, 
-                    consoleStatus: scope.status, 
-                    possibleActions: actions.filter(a => data.allowed.includes(a.slug)) 
-                };
-                if(this.state.tutorial && this.state.tutorial!=='') state.possibleActions.push({ slug: 'tutorial', label: 'Video tutorial', icon: 'fas fa-graduation-cap' });
-                if(this.state.config && this.state.config.disable_grading) state.possibleActions = state.possibleActions.filter(a => a.slug !== 'test');
-                if(typeof data.code == 'string') state.currentFileContent = data.code;
-                this.setState(state);
+                    });
+                    compilerSocket.on("ask", ({ inputs }) => {
+                        compilerSocket.emit('input', {
+                            inputs: inputs.map((question,i) => prompt(question || `Please enter the ${i+1} input`)),
+                            exerciseSlug: this.state.currentSlug
+                        });
+                    });
+                    this.setState({ compilerSocket, config });
+            })
+            .catch(error => {
+                console.error(error);
+                this.setState({ consoleStatus: { code: "internal-error", message: "Unable to fetch configuration file" }});
             });
-            compilerSocket.onStatus('compiler-success', (data) => {
-                if(this.state.config.editor === "standalone"){
-                    loadFile(this.state.currentSlug, this.state.currentFileName)
-                        .then(content => this.setState({ currentFileContent: content, codeHasBeenChanged: false }));
-                } 
-                if(typeof(this.state.config) && this.state.config.onCompilerSuccess === "open-browser"){
-                    if(data.allowed.includes("preview")) window.open(this.state.host+'/preview');
-                }
-            });
-            compilerSocket.on("ask", ({ inputs }) => {
-                compilerSocket.emit('input', {
-                    inputs: inputs.map((question,i) => prompt(question || `Please enter the ${i+1} input`)),
-                    exerciseSlug: this.state.currentSlug
-                });
-            });
-            this.setState({ compilerSocket });
         }
     }
 
@@ -209,7 +224,7 @@ export default class Home extends React.Component{
         }
         else{
             loadSingleExercise(slug)
-                .then(({ exercise, files }) => {
+            .then(({ exercise, files }) => {
                     localStorage.setItem('exercise-slug', slug);
                     this.setState({
                         files,
@@ -279,7 +294,17 @@ export default class Home extends React.Component{
             }
         };
 
-        if(!this.state.config) return "Loading configuration...";
+
+
+        if (this.state.consoleStatus && this.state.consoleStatus.code === "internal-error") 
+            return <InternalError 
+                gif={this.state.consoleStatus.gif} 
+                message={this.state.consoleStatus.message} 
+                repo={this.state.config ? this.state.config.repository : null} 
+                video={this.state.consoleStatus.video} 
+            />;
+
+        if(!this.state.config) return <Loading className="centered-box" />;
         return <div>
             { this.state.helpSteps[this.state.config.editor] && <Joyride
                     steps={this.state.helpSteps[this.state.config.editor]}
