@@ -151,11 +151,17 @@ export default class Home extends React.Component{
             fetch(this.state.host+'/config').then(resp => resp.json()).then(config => {
             
                     const session = Session.getSession(config.session || "bc-exercises");
-                    if(!session.active) Session.start({ payload: { showHelp: true } }, config.session || "bc-exercises");
-                    else if(typeof session.payload.showHelp === 'undefined') Session.setPayload({ showHelp:true });
+                    if(!session.active) Session.start({ payload: { showHelp: true, currentProgress: this.state.currentProgress } }, config.session || "bc-exercises");
+                    else if(typeof session.payload.showHelp === 'undefined') Session.setPayload({ showHelp:true, currentProgress: this.state.currentProgress });
         
                     loadExercises()
-                        .then((exercises) => {
+                        .then((_exercises) => {
+                            //mark all as not done at the begginning unless they come with a status already
+                            const exercises = _exercises.map(e => {
+                                if(e.done === undefined) e.done = false;
+                                return e;
+                            });
+
                             this.setState({ exercises, error: null });
                             if(!window.location.hash || window.location.hash == '#'){
                                 const _savedSlug = localStorage.getItem('exercise-slug');
@@ -201,6 +207,15 @@ export default class Home extends React.Component{
                         if(typeof(this.state.config) && this.state.config.onCompilerSuccess === "open-browser"){
                             if(data.allowed.includes("preview")) window.open(this.state.host+'/preview');
                         }
+                    });
+                    compilerSocket.onStatus('testing-success', (data) => {
+                        this.setState({ 
+                            exercises: this.state.exercises.map(e => {
+                                if(e.slug == this.state.currentSlug) e.done = true;
+                                return e;
+                            }),
+                            current: Object.assign(this.state.current, { done: true })
+                        });
                     });
                     compilerSocket.on("ask", ({ inputs }) => {
                         compilerSocket.emit('input', {
@@ -294,7 +309,11 @@ export default class Home extends React.Component{
             }
         };
 
-
+        const jumpToExercise = (slug) => {
+            if(slug > this.state.currentSlug && !this.state.current.done && this.state.config.grading === "incremental") 
+                alert("You need to finish this exercise first before you can continue");
+            else window.location.hash = "#"+slug;
+        };
 
         if (this.state.consoleStatus && this.state.consoleStatus.code === "internal-error") 
             return <InternalError 
@@ -335,7 +354,7 @@ export default class Home extends React.Component{
                         exercises={this.state.exercises}
                         defaultTranslation={this.state.currentTranslation}
                         className={`editor-${this.state.config.editor}`}
-                        onClick={slug => window.location.hash = "#"+slug}
+                        onClick={slug => jumpToExercise(slug)}
                         onLanguageClick={lang => loadReadme(this.state.current.slug, lang).then(readme => {
                                 const tutorial = !readme.attributes ? null : readme.attributes.tutorial || null;
                                 const intro = !readme.attributes ? null : readme.attributes.intro || null;
@@ -427,7 +446,7 @@ export default class Home extends React.Component{
                         defaultTranslation={this.state.currentTranslation}
                         exercises={this.state.exercises}
                         className={`editor-${this.state.config.editor}`}
-                        onClick={slug => window.location.hash = "#"+slug}
+                        onClick={slug => jumpToExercise(slug)}
                         onOpen={status => this.setState({ menuOpened: status })}
                         onLanguageClick={lang => loadReadme(this.state.current.slug, lang).then(readme => {
                                 const tutorial = !readme.attributes ? null : readme.attributes.tutorial || null;
