@@ -8,7 +8,7 @@ export const getStatus = function(status='initializing'){
     };
     const bad = () => {
         const icons = [ '🤮','🤢','🤐','🤬','😡','😵','🤷🏽‍♂️','🤷🏻‍♀️','😬','😭','😤', '🤭', '🤒', '💩', '🧟‍♂️', '🧟‍♀️' ];
-        const messages = ["Don't panic", "Keep trying!", "Different error == good news", "Keep going!", "Never give up", "No pain no gain"];
+        const messages = ["Don't panic", "Keep trying!", "You'll get it the next time", "Keep going!", "Never give up", "No pain no gain", "Not correct my friend", "Focus on the force inside you"];
         return `${icons[Math.floor(Math.random() * Math.floor(icons.length))]} ${messages[Math.floor(Math.random() * Math.floor(messages.length))]}`;
     };
     switch(status){

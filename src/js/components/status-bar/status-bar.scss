@@ -19,10 +19,10 @@
     color: white;
     &.fixed{
         position: fixed;
+        display: table;
         top: 40px;
         bottom: 0;
         width: 100%;
-        height: fit-content;
     }
     .status{
         font-size: 17px;
