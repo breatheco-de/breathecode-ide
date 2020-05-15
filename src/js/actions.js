@@ -52,7 +52,6 @@ const actions = {
                 .then(exercise => {
                     if(exercise && Array.isArray(exercise.files)) resolve(exercise);
                     else{
-                        console.log("Single exercise: ", exercise);
                         throw new Error('Invalid array of files found for the exercise', exercise);
                     }
                 })

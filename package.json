@@ -33,7 +33,7 @@
     "html-loader": "^0.5.5",
     "html-webpack-plugin": "^3.2.0",
     "monaco-editor-webpack-plugin": "^1.5.2",
-    "node-sass": "^4.13.1",
+    "node-sass": "^4.14.1",
     "pre-commit": "^1.2.2",
     "react-svg-loader": "^2.1.0",
     "remote-origin-url": "^1.0.0",
@@ -42,8 +42,8 @@
     "style-loader": "^0.19.0",
     "targz": "^1.0.1",
     "webpack": "^4.41.5",
-    "webpack-cli": "^3.1.1",
-    "webpack-dev-server": "^3.3.1"
+    "webpack-cli": "^3.3.11",
+    "webpack-dev-server": "^3.11.0"
   },
   "babel": {
     "presets": [
@@ -52,7 +52,7 @@
     ]
   },
   "dependencies": {
-    "@breathecode/ui-components": "^1.1.66",
+    "@breathecode/ui-components": "^1.1.76",
     "ansi-to-react": "^3.3.1",
     "bc-react-session": "^1.5.16",
     "bootstrap": "^4.3.1",

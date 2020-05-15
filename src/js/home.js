@@ -223,6 +223,10 @@ export default class Home extends React.Component{
                             exerciseSlug: this.state.currentSlug
                         });
                     });
+                    compilerSocket.on("reload", (data) => {
+                        console.log("Reloading...", data);
+                        window.location.reload();
+                    });
                     this.setState({ compilerSocket, config });
             })
             .catch(error => {
@@ -251,7 +255,6 @@ export default class Home extends React.Component{
                         menuOpened: false
                     });
                     if(files.length > 0){
-                        console.log(this.state.config.editor);
                         if(this.state.config.editor === 'standalone') loadFile(slug, files[0].name).then(content => this.setState({
                             currentFileContent: content,
                             currentFileName: files[0].name,
@@ -310,7 +313,7 @@ export default class Home extends React.Component{
         };
 
         const jumpToExercise = (slug) => {
-            if(slug > this.state.currentSlug && !this.state.current.done && this.state.config.grading === "incremental") 
+            if(slug > this.state.currentSlug && this.state.current.graded && !this.state.current.done && this.state.config.grading === "incremental") 
                 alert("You need to finish this exercise first before you can continue");
             else window.location.hash = "#"+slug;
         };
@@ -367,7 +370,7 @@ export default class Home extends React.Component{
                         { this.state.introOpen && this.state.intro ?
                             <Intro url={this.state.intro} onClose={() => this.setState({ introOpen: false })} playing={!showHelp} />
                             :
-                            <MarkdownParser className="markdown" source={this.state.currentInstructions} />
+                            <MarkdownParser className="markdown" context={this.state.config} source={this.state.currentInstructions} />
                         }
                     </Sidebar>
                     <div>
@@ -459,7 +462,7 @@ export default class Home extends React.Component{
                         { this.state.introOpen && this.state.intro ?
                             <Intro url={this.state.intro} onClose={() => this.setState({ introOpen: false })} playing={!showHelp} />
                             :
-                            <MarkdownParser className="markdown" source={this.state.currentInstructions} />
+                            <MarkdownParser className="markdown" context={this.state.config} source={this.state.currentInstructions} />
                         }
                     </Sidebar>
                 </div>
