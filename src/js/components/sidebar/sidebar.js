@@ -3,7 +3,9 @@ import PropTypes from "prop-types";
 import Menu from '../menu/Menu.js';
 import { LanguageSwitcher } from '../language/LanguageSwitcher.js';
 import { languages } from "monaco-editor";
-
+import { Icon } from "@breathecode/ui-components";
+import "./sidebar.css";
+ 
 export default class Sidebar extends React.Component {
     constructor(){
         super();
@@ -27,6 +29,7 @@ export default class Sidebar extends React.Component {
                         onLanguageClick && onLanguageClick(lang);
                     }}
                 />
+                <a href="https://github.com/learnpack/learnpack/issues/new" className="bug" target="_blank" rel="noopener noreferrer" data-toggle="tooltip" data-placement="bottom" title="Report a bug"><Icon type="bug" size="23px" className="text-primary ml-1 " /></a>
                 {next && 
                     <button className="next-exercise btn btn-dark btn-sm" disabled={disabled} onClick={() => {
                         this.setState({ open: false });
