@@ -9,6 +9,7 @@ import '../styles/index.scss';
 import Home from './home.js';
 
 
+
 //render your react application
 ReactDOM.render(
     <Home />,

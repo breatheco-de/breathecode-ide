@@ -1,26 +1,34 @@
+  
 .bug{
-    background-image: none !important 
+    background-image: none !important ;
+    color: white;
+    font-size: 15px
 }
 
-.tooltip{
-  position: relative;
-  display: inline-block;
+ .btn:hover .hint {
+    display: block;
 }
 
-.tooltip-text{
-  visibility: hidden;
-  width: 120px;
-  background-color: black;
-  color: #fff;
-  text-align: center;
-  border-radius: 6px;
-  padding: 5px 0;
-
-  /* Position the tooltip */
-  position: absolute;
-  z-index: 1;
+.hint {
+    position: absolute;
+    top: 39px;
+    left: 35px;
+    display: none;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 5px;
+    font-size: 14px;
 }
 
-.tooltip:hover .tooltip-text {
-  visibility: visible;
+.btn:focus{
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.btn:active{
+    text-shadow: none !important;
+}
+
+.btn:hover {
+    color: white;
+    text-decoration: none;
 }
