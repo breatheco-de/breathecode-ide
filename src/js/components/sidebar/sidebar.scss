@@ -1,0 +1,38 @@
+.prev-next-bar{
+    .bug{
+        background-image: none !important ;
+        color: #ffffff;
+        font-size: 13px;
+        &:hover{
+          font-size: 15px;  
+        }
+    }
+
+    .btn:hover .hint {
+        display: block;
+    }
+
+    .hint {
+        position: absolute;
+        top: 39px;
+        left: 35px;
+        display: none;
+        background: rgba(0, 0, 0, 0.7);
+        padding: 5px;
+        font-size: 14px;
+    }
+
+    .btn:focus{
+        outline: none !important;
+        box-shadow: none !important;
+    }
+
+    .btn:active{
+        text-shadow: none !important;
+    }
+
+    .btn:hover {
+        color: white;
+        text-decoration: none;
+    } 
+}  

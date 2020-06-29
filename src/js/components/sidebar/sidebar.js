@@ -4,7 +4,7 @@ import Menu from '../menu/Menu.js';
 import { LanguageSwitcher } from '../language/LanguageSwitcher.js';
 import { languages } from "monaco-editor";
 import { Icon } from "@breathecode/ui-components";
-import "./sidebar.css";
+import "./sidebar.scss";
 
 
 export default class Sidebar extends React.Component {
@@ -18,7 +18,7 @@ export default class Sidebar extends React.Component {
         const { className, children, current, next, previous, disabled, onClick, onLanguageClick, exercises, onOpen, defaultTranslation } = this.props;
 
         return (<div className={className}>
-            <div className={`prev-next-bar`+ "button-bar"}>
+            <div className={`prev-next-bar`}>
                 {<button onClick={e => {
                     this.setState({ open: !this.state.open });
                     if (onOpen) onOpen(!this.state.open);
