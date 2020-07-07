@@ -30,7 +30,7 @@ export default class Sidebar extends React.Component {
                         onLanguageClick && onLanguageClick(lang);
                     }}
                 />
-                <a href="https://github.com/learnpack/learnpack/issues/new" className="bug btn" target="_blank" rel="noopener noreferrer" data-toggle="tooltip" data-placement="top" title="Report a Bug"><Icon type="bug" size="15px" className="white ml-1" /><small className="hint">Report a bug</small></a>
+                <a href="https://github.com/learnpack/learnpack/issues/new?assignees=&labels=&template=bug_report.md&title=" className="bug btn" target="_blank" rel="noopener noreferrer" data-toggle="tooltip" data-placement="top" title="Report a Bug"><Icon type="bug" size="15px" className="white ml-1" /><small className="hint">Report a bug</small></a>
                 {next &&
                     <button className="next-exercise btn btn-dark btn-sm" disabled={disabled} onClick={() => {
                         this.setState({ open: false });
