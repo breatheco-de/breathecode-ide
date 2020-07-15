@@ -15,7 +15,7 @@ export default class Sidebar extends React.Component {
         };
     }
     render() {
-        const { className, children, current, next, previous, disabled, onClick, onLanguageClick, exercises, onOpen, defaultTranslation } = this.props;
+        const { className, children, current, next, previous, disabled, onClick, onLanguageClick, exercises, onOpen, defaultTranslation, repository } = this.props;
 
         return (<div className={className}>
             <div className={`prev-next-bar`}>
@@ -30,7 +30,7 @@ export default class Sidebar extends React.Component {
                         onLanguageClick && onLanguageClick(lang);
                     }}
                 />
-                <a href="https://github.com/learnpack/learnpack/issues/new?assignees=&labels=&template=bug_report.md&title=" className="bug btn" target="_blank" rel="noopener noreferrer" data-toggle="tooltip" data-placement="top" title="Report a Bug"><Icon type="bug" size="15px" className="white ml-1" /><small className="hint">Report a bug</small></a>
+                <a href={this.props.repository !== null ? `https://github.com/learnpack/learnpack/issues/new?assignees=&labels=&template=bug_report.md&title=Excercise%20Bug&body=1.Exercise%20Name:%20${this.props.currentExercise}%20%202.Gitpod%20URL:%20${this.props.currentUrl}%20%203.Repository%20URL:%20${this.props.repository}`:`https://github.com/learnpack/learnpack/issues/new?assignees=&labels=&template=bug_report.md&title=Excercise%20Bug&body=1.Exercise%20Name:%20${this.props.currentExercise}%20%202.Gitpod%20URL:%20${this.props.currentUrl}`} className="bug btn" target="_blank" rel="noopener noreferrer" data-toggle="tooltip" data-placement="top" title="Report a Bug"><Icon type="bug" size="15px" className="white ml-1" /><small className="hint">Report a bug</small></a>
                 {next &&
                     <button className="next-exercise btn btn-dark btn-sm" disabled={disabled} onClick={() => {
                         this.setState({ open: false });
@@ -68,7 +68,10 @@ Sidebar.propTypes = {
     onLanguageClick: PropTypes.func,
     onClick: PropTypes.func,
     onOpen: PropTypes.func,
-    exercises: PropTypes.array
+    exercises: PropTypes.array,
+    currentExercise: PropTypes.string,
+    currentUrl: PropTypes.string,
+    repository: PropTypes.string
 };
 Sidebar.defaultProps = {
     className: '',
@@ -80,5 +83,8 @@ Sidebar.defaultProps = {
     onOpen: null,
     onLanguageClick: null,
     onClick: null,
-    exercises: []
+    exercises: [],
+    currentExercise: "",
+    currentUrl: "",
+    repository: null
 };
