@@ -460,6 +460,7 @@ export default class Home extends React.Component{
                         }
                         currentExercise={this.state.current !== null ? this.state.current.slug : ""}
                         currentUrl={this.state.config !== null ? this.state.config.address : ""}
+                        repository={this.state.config !== null ? this.state.config.repository : ""}
                     >
                         { this.state.introOpen && this.state.intro ?
                             <Intro url={this.state.intro} onClose={() => this.setState({ introOpen: false })} playing={!showHelp} />
