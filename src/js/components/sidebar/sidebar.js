@@ -25,7 +25,7 @@ export default class Sidebar extends React.Component {
                 }} className="btn text-white btn-sm"><i className="fas fa-bars"></i></button>}
                 <LanguageSwitcher
                     current={defaultTranslation}
-                    translations={current ? [defaultTranslation].concat(current.translations.filter(t => t !== defaultTranslation)) : ['us']}
+                    translations={current ? [defaultTranslation].concat(Object.keys(current.translations).filter(t => t !== defaultTranslation)) : ['us']}
                     onClick={(lang) => {
                         onLanguageClick && onLanguageClick(lang);
                     }}

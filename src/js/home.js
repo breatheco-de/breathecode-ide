@@ -148,10 +148,10 @@ export default class Home extends React.Component{
     }
     componentDidMount(){
         if(this.state.host){
-            fetch(this.state.host+'/config').then(resp => resp.json()).then(config => {
-            
-                    const session = Session.getSession(config.session || "bc-exercises");
-                    if(!session.active) Session.start({ payload: { showHelp: true, currentProgress: this.state.currentProgress } }, config.session || "bc-exercises");
+            fetch(this.state.host+'/config').then(resp => resp.json()).then(configObject => {
+                    const { config } = configObject;
+                    const session = Session.getSession(configObject.session || "bc-exercises");
+                    if(!session.active) Session.start({ payload: { showHelp: true, currentProgress: this.state.currentProgress } }, configObject.session || "bc-exercises");
                     else if(typeof session.payload.showHelp === 'undefined') Session.setPayload({ showHelp:true, currentProgress: this.state.currentProgress });
         
                     loadExercises()
@@ -200,7 +200,7 @@ export default class Home extends React.Component{
                         this.setState(state);
                     });
                     compilerSocket.onStatus('compiler-success', (data) => {
-                        if(this.state.config.editor === "standalone"){
+                        if(this.state.config.editor.mode === "standalone"){
                             loadFile(this.state.currentSlug, this.state.currentFileName)
                                 .then(content => this.setState({ currentFileContent: content, codeHasBeenChanged: false }));
                         } 
@@ -243,7 +243,8 @@ export default class Home extends React.Component{
         }
         else{
             loadSingleExercise(slug)
-            .then(({ exercise, files }) => {
+                .then(exercise => {
+                    const files = exercise.files.filter(f => f.hidden === false);
                     localStorage.setItem('exercise-slug', slug);
                     this.setState({
                         files,
@@ -255,14 +256,14 @@ export default class Home extends React.Component{
                         menuOpened: false
                     });
                     if(files.length > 0){
-                        if(this.state.config.editor === 'standalone') loadFile(slug, files[0].name).then(content => this.setState({
+                        if(this.state.config.editor.mode === 'standalone') loadFile(slug, files[0].name).then(content => this.setState({
                             currentFileContent: content,
                             currentFileName: files[0].name,
                             possibleActions: this.state.possibleActions.filter(a => a.slug !== 'preview'),
                             currentFileExtension: files[0].name.split('.').pop()
                         }));
 
-                        if(this.state.config.editor === 'gitpod' && this.state.config.grading === 'isolated') this.state.compilerSocket.emit("gitpod-open", { 
+                        if(this.state.config.editor.mode === 'gitpod' && this.state.config.grading === 'isolated') this.state.compilerSocket.emit("gitpod-open", { 
                             exerciseSlug: this.state.currentSlug, 
                             files: files.map(f => f.path)
                         });
@@ -328,8 +329,8 @@ export default class Home extends React.Component{
 
         if(!this.state.config) return <Loading className="centered-box" />;
         return <div>
-            { this.state.helpSteps[this.state.config.editor] && <Joyride
-                    steps={this.state.helpSteps[this.state.config.editor]}
+            { this.state.helpSteps[this.state.config.editor.mode] && <Joyride
+                    steps={this.state.helpSteps[this.state.config.editor.mode]}
                     continuous={true}
                     run={showHelp === true && this.state.getIndex(this.state.currentSlug) === 1}
                     locale={{ back: 'Previous', close: 'Close', last: 'Finish', next: 'Next' }}
@@ -347,7 +348,7 @@ export default class Home extends React.Component{
                     }}
                 />
             }
-            {this.state.config.editor === "standalone" ?
+            {this.state.config.editor.mode === "standalone" ?
                 <SplitPane split="vertical" style={{ backgroundColor: "#333333"}} minSize={size.vertical.min} defaultSize={size.vertical.init}>
                     <Sidebar 
                         disabled={isPending(this.state.consoleStatus)}
@@ -356,7 +357,7 @@ export default class Home extends React.Component{
                         current={this.state.current}
                         exercises={this.state.exercises}
                         defaultTranslation={this.state.currentTranslation}
-                        className={`editor-${this.state.config.editor}`}
+                        className={`editor-${this.state.config.editor.mode}`}
                         onClick={slug => jumpToExercise(slug)}
                         onLanguageClick={lang => loadReadme(this.state.current.slug, lang).then(readme => {
                                 const tutorial = !readme.attributes ? null : readme.attributes.tutorial || null;
@@ -401,7 +402,7 @@ export default class Home extends React.Component{
                                     })}
                                 />
                                 <Terminal
-                                    mode={this.state.config.editor}
+                                    mode={this.state.config.editor.mode}
                                     disabled={isPending(this.state.consoleStatus) || this.state.isSaving}
                                     host={this.state.host}
                                     status={this.state.isSaving ? { code: 'saving', message: getStatus('saving') } : this.state.consoleStatus}
@@ -448,7 +449,7 @@ export default class Home extends React.Component{
                         current={this.state.current}
                         defaultTranslation={this.state.currentTranslation}
                         exercises={this.state.exercises}
-                        className={`editor-${this.state.config.editor}`}
+                        className={`editor-${this.state.config.editor.mode}`}
                         onClick={slug => jumpToExercise(slug)}
                         onOpen={status => this.setState({ menuOpened: status })}
                         onLanguageClick={lang => loadReadme(this.state.current.slug, lang).then(readme => {
